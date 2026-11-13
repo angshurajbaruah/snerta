@@ -1,24 +1,47 @@
-import { Mark, PillButton, Screen, Wordmark } from '../components/ui';
+import { BrandBar, NoAccountIcon, PillButton, Screen, UndoIcon } from '../components/ui';
 
 export function Welcome({ onStart }: { onStart: () => void }) {
   return (
-    <Screen
-      label="Welcome"
-      className="welcome"
-      footer={<PillButton onClick={onStart} className="pill--start">Get started</PillButton>}
-    >
-      <div className="welcome__brand">
-        <Wordmark />
-      </div>
-      <div className="welcome__hero" aria-hidden="true">
-        <Mark className="welcome__mark" />
-      </div>
-      <div className="welcome__copy">
-        <h1 className="display">A more reachable interface</h1>
-        <p className="lede">
-          A short experiment: try moving a few controls toward where your hand already is, and see
-          whether it actually feels easier.
-        </p>
+    <Screen label="Welcome" dock={<PillButton icon="knob" onClick={onStart}>Get started</PillButton>}>
+      <BrandBar>
+        <span className="chip">Beta</span>
+      </BrandBar>
+
+      <section className="bento--hero">
+        <div className="orbit" aria-hidden="true">
+          <span className="orbit__ring" />
+          <span className="orbit__sphere" />
+          <span className="orbit__glint" />
+          <span className="orbit__moon" />
+        </div>
+        <div className="bento__copy">
+          <h1 className="title title--hero">Every tap, within reach.</h1>
+          <p className="lede lede--on-dark">
+            A short experiment: move a few controls toward your thumb, then judge for yourself
+            whether it helped.
+          </p>
+        </div>
+      </section>
+
+      <div className="grid-2">
+        <div className="bento tile">
+          <span className="well" aria-hidden="true">
+            <NoAccountIcon size={18} />
+          </span>
+          <div>
+            <div className="tile__name">No sign-up</div>
+            <div className="tile__sub">Nothing is stored or sent</div>
+          </div>
+        </div>
+        <div className="bento tile">
+          <span className="well" aria-hidden="true">
+            <UndoIcon size={18} />
+          </span>
+          <div>
+            <div className="tile__name">Undo anytime</div>
+            <div className="tile__sub">One tap restores</div>
+          </div>
+        </div>
       </div>
     </Screen>
   );

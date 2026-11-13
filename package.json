@@ -1,8 +1,8 @@
 {
-  "name": "kab",
+  "name": "snerta",
   "private": true,
   "version": "0.1.0",
-  "description": "K’ab — a more reachable interface. A mobile-first, open experiment on reach-informed, reversible control placement.",
+  "description": "snerta \u2014 every tap, within reach. A mobile-first, open experiment on one-handed reach and reversible control placement.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@fontsource-variable/montserrat": "^5.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

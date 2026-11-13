@@ -1,55 +1,99 @@
-# K’ab — persistent instructions for Claude Code (fresh implementation)
+# snerta — persistent instructions for Claude Code
 
 ## Highest priority: intent
 
-The founder explicitly chose to **start a NEW K’ab codebase from zero** on 12 November 2026 using **Claude Code**. Do not clone/copy, bootstrap from, or secretly reuse the earlier Codex project or its `src`, tests, CSS, `node_modules`, build, or CI state. Do not target the existing `angshurajbaruah/K-ab` remote by default. Preserve existing source brief and image files in THIS starter folder; you may add fresh application code beside them.
+This is a clean-room codebase, started 12 November 2026. Do not clone, copy or bootstrap from
+the earlier Codex project (`angshurajbaruah/K-ab`) or its src, tests, CSS, build or CI state,
+and do not target that remote. The remote here is `angshurajbaruah/snerta`.
 
-The **idea, brand and research standards are NOT being restarted**. K’ab remains a mobile-first experiment investigating whether reversible, reach-informed placement of limited controls improves one-handed usability.
+The **idea and the research standards are not restarted**. snerta is a mobile-first experiment
+investigating whether reversible, reach-informed placement of a few controls improves
+one-handed usability. The answer may be no. That is a valid result.
 
-## Read before beginning
+## Name and identity (Brand Identity 2.0, 2026-11-13)
 
-1. `KAB_PRODUCT_MASTER_BRIEF.md` (vision, people, hypotheses and positioning).
-2. `PRD_AND_SCREEN_CONTRACT.md` (exact flow, metrics, requirements and limitations).
-3. `BUILD_AND_TEST_PLAN.md` and `VALIDATION_AND_RESEARCH.md` (milestones, QA and research).
-4. Open and inspect BOTH `design/references/Kab_Brand_Identity_Approved.png` and `design/references/Kab_UI_Flow_Approved.png` before creating UI. Image references override contradictory approximations in text.
-5. `source-context/Kab_Original_Product_Strategy_2026-11-11.md` is an archival original: its Codex-only preference and statements that brand is unapproved have been superseded by the user's decisions.
+- Product name: **snerta**, always lowercase. The wordmark **`snerta.`** — with the full stop,
+  no symbol — is the logo. Extra optical space between the r and the t.
+- Tagline: **Every tap, within reach.**
+- Typeface: **Montserrat**, self-hosted via `@fontsource-variable/montserrat` (SIL OFL).
+  Do not swap to the Google Fonts CDN: it would leak visitor IPs to a third party and break
+  the "nothing is stored or sent" promise.
+- Strictly greyscale: Obsidian `#0A0A0B`, Ink `#141416`, Graphite `#4A4B50`, Steel `#8A8B91`,
+  Silver `#C5C6CB`, Mist `#E6E7EA`, page `#F4F4F6`, White. No accent colours anywhere, not even
+  for status. Carry status with text and shape.
+- Bento layout: boxes with 28–32 px radius on the quiet off-white page; gradients, 3D objects
+  and depth live inside the boxes, not on the page. Read in light at the top, act in dark at the
+  bottom. Every screen ends in a dark action dock holding a white pill and a round Back.
+- Design canvas: https://claude.ai/artifact/FxQxu3JudKQzQBhtnd8kv2
+- The former **K’ab** identity is archived in `archive/kab-identity/`. Do not revive it, do not
+  delete it.
 
-## Nonnegotiable identity
+## Where the boards and the brief disagree, the brief wins on substance
 
-- Display name: **K’ab**, with apostrophe. Tagline: **A more reachable interface**.
-- Sculpted concentric fingerprint/apostrophe emblem, supplied as raster crop and within two approved design boards. Use faithfully; do not replace with a generic fingerprint emoji/stock image.
-- Helvetica Neue system stack with licensed fallbacks. Do not include/download/share proprietary font files.
-- Strictly black, charcoal, soft silver, grayscale, warm off-white. No colorful status badges, bright accent colors or sci-fi effects. Express errors/status through text and shape, not only color.
-- Premium clean product look with lots of whitespace, restrained depth, embossed/ridged mark, gently raised cards, softly inset touch area and black bottom pill CTA.
-- Match five reference mockup compositions, but prioritize usable real functionality and truthful scientific wording where reference copy overclaims.
+The design canvas is the source of truth for **look**. `KAB_PRODUCT_MASTER_BRIEF.md` and
+`PRD_AND_SCREEN_CONTRACT.md` are the source of truth for **what is claimed and measured**, and
+their research rules still apply under the new name. Three live conflicts, resolved in
+`docs/DECISION_LOG.md` D19–D21:
 
-## Product behavior
+- Calibration prompts every dot in turn and asks for all 18. It does **not** let people tap
+  only the dots they can reach — that biases the map and records no behaviour.
+- There is **no reach map** until the comfort self-report exists. Comfort is never inferred
+  from tap latency.
+- Before/after copy stays neutral. Never write that controls are "stranded", that snerta puts
+  everything "within reach", or anything else that asserts the benefit under test.
 
-- This is a website operating within its OWN page; not an iOS/Android OS customization tool.
-- Journey: Welcome → Hand selection → 3×3 calibration (9 positions twice) → explicit comfort self-report → honestly labeled reach map → Ready → reversible Standard/K’ab fictional shopping preview → two measured tasks → personal results/export/reset.
-- Calibration: neutral targets, 18 successful `pointerdown` activations, avoid `click`/`pointerup` double counting; 44px minimum UI targets, ideally 52px calibration hits. Record target ID, normalized target/pointer positions in a shared panel coordinate frame, `pointerType`, elapsed/prompt latency and viewport. Record non-target touches only **within** observed panel; they are not established misses.
-- Browser-reported touch is not proof that a thumb was used. Time is not proof of comfort. Explicit zone labels Easy, Stretch, Hard, Unknown; Unknown remains Unknown. Ask optionally about grip adjustment.
-- Standard puts Back and Bag in a header; K’ab moves those *same functional controls* to a lower left/right rail in the fictional app. This deterministic prototype rule is not proof of calibrated optimal placement. User opts in and can revert. Never reposition a target in the middle of an action/trial.
-- Each trial completes fictional Add → Bag → Continue → Confirm; no money changes hands. Use the same labels and action steps, counterbalance which mode starts, time only between explicit task start and completion (not comfort rating). Provide negative/neutral outcomes without spin.
-- No backend, login, cookies/storage persistence, analytics, AI model, photo/video recording, body measurement, payments or personal identifiers in initial MVP. Keep state in memory and allow explicit opt-in local JSON export. No uploaded participant results in public repos.
+If a new board conflicts with the brief again, follow the brief and log it, rather than
+quietly shipping the claim.
+
+## Product behaviour
+
+- A website working inside its own page. Not an OS or other-app customisation tool.
+- Journey: Welcome → hand (left / right / switches) → 18 prompted calibration taps → comfort
+  self-report → honestly labelled reach map → Your setup → reversible Original/snerta demo →
+  counterbalanced timed tasks → honest results, export and reset.
+- Calibration: `pointerdown` only; never `click` or `pointerup`, so one contact is at most one
+  activation. 52 px hit squares, 44 px minimum for every other target. Record target id,
+  normalised target and pointer positions in one shared frame, `pointerType`, prompt-to-tap
+  latency and viewport. Non-target touches inside the tray are **observations**, never misses.
+- Browser-reported touch is not proof a thumb was used. Time is not proof of comfort. Zone
+  labels are Easy, Stretch, Hard and Unknown, and Unknown stays Unknown.
+- Original puts back/search/more in the header; snerta moves those **same controls** to a lower
+  rail — right, left, or centred for someone who switches. A deterministic prototype rule, not
+  a measured optimum. Opt-in and reversible. Never reposition anything mid-action or mid-trial.
+- The comparison area must stay pixel-stable across a layout switch. Keep mode-dependent
+  content below the device and the boxes around it fixed-size.
+- No backend, login, cookies, storage persistence, analytics, AI, camera, sensors, payments or
+  personal identifiers. State lives in memory; export is explicit and local only.
 
 ## Engineering rules
 
-- Fresh app: React + TypeScript + Vite; minimal dependencies, CSS based on approved images, pure helpers separated from React state, Vitest for tests if suitable.
-- Keep code and docs clean, accessible, keyboard-operable (except intrinsically touch-specific measurements, which need a clearly marked skip/preview path), portrait-aware, safe-area-aware, support reduced motion and 200% browser zoom.
-- Do not assume existing benchmark/test counts. Write tests for this new implementation, run `npm test`, `npm run build`, and report actual command output. Favor a small early working phone spike over an elaborate static landing page.
-- Do not turn unverified events into medical/biometric or hand-geometry claims. Do not fabricate research outcomes, mock them without labeling, or pretend a remote test equals a physical-device test.
-- Do not push/create public repo, deploy, change visual identity or assets, purchase services or turn on data collection without explicit user approval. Preserve any uncommitted work and avoid destructive Git actions.
+- React + TypeScript + Vite, minimal dependencies, pure helpers in `src/lib/` separate from
+  React state, Vitest for tests.
+- Accessible and keyboard-operable except the intrinsically touch-specific measurement, which
+  needs a clearly marked skip path. Portrait-aware, safe-area-aware, reduced-motion aware,
+  usable at 200% zoom and at 320 px wide.
+- Every text colour must clear WCAG AA against what is actually behind it, gradients included.
+  `scripts/contrast-audit.cjs` and `scripts/hero-contrast.cjs` check this; run them after any
+  visual change.
+- Run `npm test` and `npm run build` and report the real output. Never claim a device test from
+  an emulated run; `scripts/smoke-touch.cjs` is emulation and must be described as such.
+- Do not turn recorded events into medical, biometric or hand-geometry claims. Do not fabricate
+  or unlabelled-mock research outcomes.
+- Do not push to a public repo, deploy, change the visual identity, buy services or turn on any
+  data collection without explicit approval. Preserve uncommitted work; avoid destructive git.
 
-## Session/milestone workflow
+## Session workflow
 
-1. Read latest in-repo status and decision log if present. Inspect code and git status; do not treat historical Codex logs as new evidence.
-2. Name one milestone and measurable acceptance criteria.
-3. Build the smallest functioning slice, writing tests and verifying locally.
-4. Report what was executed, what requires a real phone, and any blockers. Provide steps to reproduce.
-5. Update `docs/BUILD_STATUS.md`, `docs/DECISION_LOG.md` and `docs/QA_FINDINGS.md` when material facts change.
-6. Give ONE next prioritized action; avoid unrelated features.
+1. Read `docs/BUILD_STATUS.md` and `docs/DECISION_LOG.md`, then check `git status`.
+2. Name one milestone and its acceptance criteria.
+3. Build the smallest working slice, with tests, and verify locally.
+4. Report what ran, what still needs a real phone, and any blockers, with repro steps.
+5. Update `docs/BUILD_STATUS.md`, `docs/DECISION_LOG.md` and `docs/QA_FINDINGS.md` whenever a
+   material fact changes.
+6. Give one prioritised next action. No unrelated features.
 
-## First work order
+## Next milestone
 
-Scaffold brand-faithful Welcome + Hand Selection and a functional touch-event feasibility spike. Include a reversible Standard/K’ab placement demonstration; the full mapped comparison follows in later milestones. Do not declare the MVP completed from a visual preview. Test physical browser interaction as early as user hardware access allows.
+Comfort self-report after calibration, then the reach map built from taps *and* what the
+person reported, labelled as exactly that. Then the task flow and the counterbalanced timed
+trials. Physical-phone testing is overdue and blocks any claim about the prototype working.

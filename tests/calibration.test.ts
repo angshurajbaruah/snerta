@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   SEQUENCE_LENGTH,
+  TARGET_COUNT,
   calibrationReducer,
   classifyPointerDown,
   evidenceKind,
@@ -57,12 +58,13 @@ function fresh(seed = 1) {
 }
 
 describe('makeSequence', () => {
-  it('contains each of the 9 positions exactly twice, as two full passes', () => {
+  it('contains each position exactly twice, as two full passes', () => {
+    const all = Array.from({ length: TARGET_COUNT }, (_, i) => i);
     for (let seed = 1; seed < 300; seed++) {
       const seq = makeSequence(seeded(seed));
-      expect(seq).toHaveLength(18);
-      expect(seq.slice(0, 9).sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
-      expect(seq.slice(9).sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+      expect(seq).toHaveLength(SEQUENCE_LENGTH);
+      expect(seq.slice(0, TARGET_COUNT).sort((a, b) => a - b)).toEqual(all);
+      expect(seq.slice(TARGET_COUNT).sort((a, b) => a - b)).toEqual(all);
     }
   });
 

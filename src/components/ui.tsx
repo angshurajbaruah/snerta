@@ -1,144 +1,189 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-/* ---------- Icons (inline, stroke-based, grayscale via currentColor) ---------- */
+/* ---------- Icons: inline stroke SVG, colour from currentColor ---------- */
 
-export function ArrowRight() {
-  return (
-    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+type IconProps = { size?: number };
 
-export function ChevronLeft() {
-  return (
-    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function Check({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function BagIcon() {
-  return (
-    <svg className="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M5 8h14l-1.2 12H6.2L5 8z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      <path d="M9 8V6.5a3 3 0 016 0V8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/**
- * Open-hand line art. Shape adapted from the Lucide "hand" icon (ISC licence, see NOTICE.md).
- * Drawn as the back of a left hand (thumb on the right); mirrored for the right hand.
- */
-export function HandIcon({ hand }: { hand: 'left' | 'right' }) {
+function Svg({ size = 20, children }: IconProps & { children: ReactNode }) {
   return (
     <svg
-      className="hand-icon"
       viewBox="0 0 24 24"
+      width={size}
+      height={size}
       aria-hidden="true"
       focusable="false"
-      style={hand === 'right' ? { transform: 'scaleX(-1)' } : undefined}
+      style={{ fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' }}
     >
-      <g fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
-        <path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2" />
-        <path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8" />
-        <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
-      </g>
+      {children}
+    </svg>
+  );
+}
+
+export const ArrowRight = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 12h14" />
+    <path d="M12 5l7 7-7 7" />
+  </Svg>
+);
+
+export const ArrowLeft = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M19 12H5" />
+    <path d="M12 19l-7-7 7-7" />
+  </Svg>
+);
+
+export const Check = ({ size = 14 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" style={{ fill: 'none', stroke: 'currentColor', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+    <path d="M20 6L9 17l-5-5" />
+  </svg>
+);
+
+export const SearchIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </Svg>
+);
+
+export const MenuIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="5" r="1" />
+    <circle cx="12" cy="12" r="1" />
+    <circle cx="12" cy="19" r="1" />
+  </Svg>
+);
+
+export const NoAccountIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+    <path d="M3 3l18 18" />
+  </Svg>
+);
+
+export const UndoIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 12a9 9 0 1 0 3-6.7" />
+    <path d="M3 4v5h5" />
+  </Svg>
+);
+
+export const SwapIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M7 7h11l-3-3" />
+    <path d="M17 17H6l3 3" />
+  </Svg>
+);
+
+/** Open-hand outline, adapted from the Lucide "hand" icon (ISC — see NOTICE.md). */
+export function HandIcon({ hand, size = 36 }: { hand: 'left' | 'right'; size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      focusable="false"
+      style={{
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 1.6,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        transform: hand === 'left' ? 'scaleX(-1)' : undefined,
+      }}
+    >
+      <path d="M18 11V6a2 2 0 0 0-4 0" />
+      <path d="M14 10V4a2 2 0 0 0-4 0v2" />
+      <path d="M10 10.5V6a2 2 0 0 0-4 0v8" />
+      <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
     </svg>
   );
 }
 
 /* ---------- Brand ---------- */
 
-/** The approved sculpted mark (raster crop from the approved board). */
-export function Mark({ className = '', size }: { className?: string; size?: number }) {
+/**
+ * The wordmark is the logo. Lowercase, always with the full stop.
+ * Extra optical space between r and t; screen readers hear "snerta".
+ */
+export function Wordmark({ size = 'sm', onDark = false }: { size?: 'sm' | 'lg'; onDark?: boolean }) {
   return (
-    <img
-      className={`mark ${className}`}
-      src="./brand/kab-mark.png"
-      alt=""
-      aria-hidden="true"
-      width={size}
-      draggable={false}
-    />
-  );
-}
-
-/** Wordmark: K + sculpted apostrophe + ab. Screen readers hear “K’ab”. */
-export function Wordmark({ size = 'sm' }: { size?: 'sm' | 'lg' }) {
-  return (
-    <span className={`wordmark wordmark--${size}`} role="img" aria-label="K’ab">
-      <span aria-hidden="true">K</span>
-      <img className="wordmark__mark" src="./brand/kab-mark-tight.png" alt="" aria-hidden="true" draggable={false} />
-      <span aria-hidden="true">ab</span>
+    <span className={`wordmark wordmark--${size} ${onDark ? 'wordmark--on-dark' : ''}`} role="img" aria-label="snerta">
+      <span aria-hidden="true">
+        sne<span className="wordmark__r">r</span>ta.
+      </span>
     </span>
   );
 }
 
 /* ---------- Layout primitives ---------- */
 
-export function PillButton({
-  children,
-  arrow = true,
-  variant = 'primary',
-  className = '',
-  ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { arrow?: boolean; variant?: 'primary' | 'secondary' }) {
+export function BrandBar({ children }: { children?: ReactNode }) {
   return (
-    <button type="button" className={`pill pill--${variant} ${className}`} {...rest}>
-      <span className="pill__label">{children}</span>
-      {arrow && <ArrowRight />}
-    </button>
+    <div className="brandbar">
+      <Wordmark />
+      {children}
+    </div>
   );
 }
 
-export function TopBar({ onBack, step }: { onBack?: () => void; step?: 1 | 2 | 3 }) {
+export function StepChip({ step, total = 3 }: { step: number; total?: number }) {
   return (
-    <header className="topbar">
-      {onBack ? (
-        <button type="button" className="icon-btn" onClick={onBack} aria-label="Back">
-          <ChevronLeft />
-        </button>
-      ) : (
-        <span className="icon-btn icon-btn--ghost" aria-hidden="true" />
-      )}
-      {step && (
-        <div className="progress" role="progressbar" aria-label="Setup progress" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} aria-valuetext={`Step ${step} of 3`}>
-          {[1, 2, 3].map((n) => (
-            <span key={n} className={`progress__seg ${n <= step ? 'is-on' : ''}`} />
-          ))}
-        </div>
-      )}
-      <span className="icon-btn icon-btn--ghost" aria-hidden="true" />
-    </header>
+    <span className="chip">
+      <span className="steps" aria-hidden="true">
+        {Array.from({ length: total }, (_, i) => (
+          <span key={i} className={`steps__bar ${i < step ? 'is-on' : ''}`} />
+        ))}
+      </span>
+      Step {step} of {total}
+    </span>
   );
 }
 
 export function Screen({
   children,
-  footer,
-  className = '',
+  dock,
+  fit = false,
   label,
 }: {
   children: ReactNode;
-  footer?: ReactNode;
-  className?: string;
+  dock?: ReactNode;
+  fit?: boolean;
   label: string;
 }) {
   return (
-    <main className={`screen ${className}`} aria-label={label}>
-      <div className="screen__body">{children}</div>
-      {footer && <div className="screen__footer">{footer}</div>}
+    <main className={`screen ${fit ? 'screen--fit' : ''}`} aria-label={label}>
+      {children}
+      {dock && <div className="dock">{dock}</div>}
     </main>
+  );
+}
+
+export function PillButton({
+  children,
+  icon = 'arrow',
+  className = '',
+  ...rest
+}: ButtonHTMLAttributes<HTMLButtonElement> & { icon?: 'arrow' | 'knob' | 'none' }) {
+  return (
+    <button type="button" className={`pill ${icon === 'knob' ? 'pill--lead' : ''} ${className}`} {...rest}>
+      <span>{children}</span>
+      {icon === 'arrow' && <ArrowRight size={18} />}
+      {icon === 'knob' && (
+        <span className="pill__knob" aria-hidden="true">
+          <ArrowRight />
+        </span>
+      )}
+    </button>
+  );
+}
+
+export function BackButton({ onClick, label = 'Back' }: { onClick: () => void; label?: string }) {
+  return (
+    <button type="button" className="round-btn" onClick={onClick} aria-label={label}>
+      <ArrowLeft />
+    </button>
   );
 }

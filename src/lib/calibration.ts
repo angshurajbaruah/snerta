@@ -1,14 +1,21 @@
 import type { PanelObservation, PanelRect, TapSample } from '../types';
 
-/** Grid is 3×3, row-major: 0 1 2 / 3 4 5 / 6 7 8. */
-export const GRID_SIZE = 3;
-export const TARGET_COUNT = GRID_SIZE * GRID_SIZE;
+/** Grid, row-major from the top-left: COLS wide by ROWS tall. */
+export const COLS = 3;
+export const ROWS = 3;
+export const TARGET_COUNT = COLS * ROWS;
+/** How many times each position is prompted. Two passes give a repeat measure per position. */
 export const PASSES = 2;
 export const SEQUENCE_LENGTH = TARGET_COUNT * PASSES;
 /** Hit area is a 52×52 CSS px square around each target centre. */
 export const HIT_HALF_SIZE_PX = 26;
-/** Target centres as fractions of panel width/height. Same for both axes. */
-export const TARGET_FRACTIONS = [1 / 6, 3 / 6, 5 / 6] as const;
+
+/** Evenly spaced centres as fractions of the panel, inset by half a cell. */
+function fractions(n: number): number[] {
+  return Array.from({ length: n }, (_, i) => (2 * i + 1) / (2 * n));
+}
+export const COL_FRACTIONS = fractions(COLS);
+export const ROW_FRACTIONS = fractions(ROWS);
 
 export type Rng = () => number;
 
@@ -66,8 +73,8 @@ export function targetFraction(targetId: number): { x: number; y: number } {
     throw new RangeError(`targetId out of range: ${targetId}`);
   }
   return {
-    x: TARGET_FRACTIONS[targetId % GRID_SIZE],
-    y: TARGET_FRACTIONS[Math.floor(targetId / GRID_SIZE)],
+    x: COL_FRACTIONS[targetId % COLS],
+    y: ROW_FRACTIONS[Math.floor(targetId / COLS)],
   };
 }
 

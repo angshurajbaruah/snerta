@@ -18,18 +18,18 @@ const { chromium, devices } = require('playwright');
   await p.getByRole('button', { name: 'Start' }).tap();
   // a stray touch away from the active dot must not count
   await p.waitForTimeout(80);
-  const panel = await p.getByTestId('touch-panel').boundingBox();
+  const panel = await p.getByTestId('tray-field').boundingBox();
   for (let i = 0; i < 18; i++) {
     await p.waitForTimeout(60);
-    const box = await p.locator('.dot.is-active').boundingBox();
+    const box = await p.locator('.bead.is-active').boundingBox();
     if (i === 3) await p.touchscreen.tap(panel.x + panel.width / 2, panel.y + 14); // inside panel, away from every dot
     await p.touchscreen.tap(box.x + box.width / 2 + 4, box.y + box.height / 2 - 3);
   }
-  const counter = await p.locator('.counter').innerText();
-  await p.getByRole('button', { name: 'Continue' }).tap();
-  const lede = await p.locator('.lede').innerText();
-  const stats = await p.locator('.stats').innerText();
-  const ok = /All 18 done/.test(counter) && /reported by your browser as touch/.test(lede) && /18\s*accepted taps/.test(stats) && /1\s*other touches/.test(stats);
+  const counter = await p.locator('.count-chip').innerText();
+  await p.getByRole('button', { name: 'Build my reach map' }).tap();
+  const lede = await p.locator('.intro .lede').innerText();
+  const stats = await p.locator('.grid-3').innerText();
+  const ok = /All 18 done/.test(counter) && /reported every tap as touch/.test(lede) && /18\s*taps counted/.test(stats) && /1\s*other touches/.test(stats);
   console.log({ counter, stats: stats.replace(/\s+/g, ' '), errors });
   console.log(ok && errors.length === 0 ? 'SMOKE PASS (emulated touch)' : 'SMOKE FAIL');
   await b.close();

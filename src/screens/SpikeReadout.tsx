@@ -1,9 +1,14 @@
 import { TARGET_COUNT, evidenceKind, median } from '../lib/calibration';
 import { buildSpikeExport, downloadJson } from '../lib/export';
-import { PillButton, Screen, TopBar } from '../components/ui';
+import { BackButton, BrandBar, PillButton, Screen, StepChip } from '../components/ui';
 import type { Hand } from '../types';
 import type { CalibrationResult } from './Calibrate';
 
+/**
+ * Milestone-2 interim screen. This is NOT yet the reach map: a reach map needs the
+ * comfort self-report, which is the next piece of work. Until then this screen shows
+ * only what the browser actually recorded, with no comfort labels inferred from timing.
+ */
 export function SpikeReadout({
   hand,
   result,
@@ -17,7 +22,7 @@ export function SpikeReadout({
 }) {
   const { samples, observations, skipped } = result;
   const kind = skipped ? 'skipped' : evidenceKind(samples);
-  const types = Array.from(new Set(samples.map((s) => s.pointerType)));
+  const otherTypes = Array.from(new Set(samples.map((s) => s.pointerType))).filter((t) => t !== 'touch');
   const perZone = Array.from({ length: TARGET_COUNT }, (_, id) =>
     median(samples.filter((s) => s.targetId === id && !s.promptRestarted).map((s) => s.latencyMs)),
   );
@@ -25,104 +30,136 @@ export function SpikeReadout({
   const exportNow = () =>
     downloadJson(
       buildSpikeExport({ hand, samples, observations, hiddenCount: result.hiddenCount, skipped }),
-      `kab-session-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.json`,
+      `snerta-session-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.json`,
     );
 
   return (
-    <Screen label="Calibration readout" footer={<PillButton onClick={onContinue}>Try the layout demo</PillButton>}>
-      <TopBar onBack={onBack} step={3} />
+    <Screen
+      label="What was recorded"
+      dock={
+        <>
+          <BackButton onClick={onBack} />
+          <PillButton onClick={onContinue}>See the layouts</PillButton>
+        </>
+      }
+    >
+      <BrandBar>
+        <StepChip step={3} />
+      </BrandBar>
+
       <div className="intro">
-        <p className="eyebrow">Build check · temporary screen</p>
-        <h1 className="title">What the browser recorded</h1>
+        <span className="eyebrow">Build check · interim screen</span>
+        <h1 className="title">What was recorded</h1>
         <p className="lede">
-          {kind === 'skipped' && 'You skipped calibration, so nothing was measured. The demo still works.'}
+          {kind === 'skipped' && 'You skipped calibration, so nothing was measured. The layout demo still works.'}
           {kind === 'touch' &&
-            'All 18 taps were reported by your browser as touch. That’s browser-reported touch, not proof of which finger you used.'}
+            'Your browser reported every tap as touch. That is browser-reported touch — it does not prove which finger you used.'}
           {kind === 'preview' &&
-            `Some taps came from a ${types.filter((t) => t !== 'touch').join(' / ')}, so this run counts as a preview, not thumb data.`}
-          {kind === 'incomplete' && 'This run is incomplete.'}
+            `Some taps came from a ${otherTypes.join(' / ')}, so this counts as a preview rather than thumb data.`}
+          {kind === 'incomplete' && 'This run did not finish, so there is no complete set to show.'}
         </p>
       </div>
 
-      {!skipped && (
-        <>
-          <section className="card" aria-labelledby="lat-h">
-            <h2 className="card__title" id="lat-h">
-              Time from dot appearing to tap
-            </h2>
-            <p className="card__note">
-              Median of two taps per position, in milliseconds. It includes noticing the dot, so it is
-              not a measure of comfort or effort.
-            </p>
-            <div className="zone-grid" role="table" aria-label="Median latency by position">
-              {perZone.map((v, i) => (
-                <div key={i} className="zone-grid__cell" role="cell" aria-label={`Position ${i + 1}: ${v === null ? 'no data' : `${Math.round(v)} ms`}`}>
-                  {v === null ? '—' : Math.round(v)}
-                </div>
-              ))}
-            </div>
-          </section>
+      <div className="scroller">
+        {!skipped && (
+          <>
+            <section className="bento" aria-labelledby="lat-h">
+              <h2 className="tile__name" id="lat-h">
+                Time from dot appearing to tap
+              </h2>
+              <p className="note">
+                Median of the two taps at each position, in milliseconds. This includes noticing the
+                dot and deciding to move, so it is not a measure of comfort or of effort.
+              </p>
+              <div className="zone-grid" role="group" aria-label="Median time by position">
+                {perZone.map((v, i) => (
+                  <div
+                    key={i}
+                    className="zone-grid__cell"
+                    aria-label={`Position ${i + 1}: ${v === null ? 'no data' : `${Math.round(v)} milliseconds`}`}
+                  >
+                    {v === null ? '—' : Math.round(v)}
+                  </div>
+                ))}
+              </div>
+            </section>
 
-          <section className="card stats">
-            <div>
-              <span className="stats__n">{samples.length}</span>
-              <span className="stats__l">accepted taps</span>
+            <div className="grid-3">
+              <div className="bento stat">
+                <span className="stat__n">{samples.length}</span>
+                <span className="stat__l">taps counted</span>
+              </div>
+              <div className="bento stat">
+                <span className="stat__n">{observations.length}</span>
+                <span className="stat__l">other touches in the tray</span>
+              </div>
+              <div className="bento stat">
+                <span className="stat__n">{result.hiddenCount}</span>
+                <span className="stat__l">times the page was hidden</span>
+              </div>
             </div>
-            <div>
-              <span className="stats__n">{observations.length}</span>
-              <span className="stats__l">other touches in panel</span>
-            </div>
-            <div>
-              <span className="stats__n">{result.hiddenCount}</span>
-              <span className="stats__l">times page was hidden</span>
-            </div>
-          </section>
 
-          <details className="card raw">
-            <summary>Raw samples</summary>
-            <div className="raw__scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Pos</th>
-                    <th>Type</th>
-                    <th>Target x,y</th>
-                    <th>Tap x,y</th>
-                    <th>ms</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {samples.map((s) => (
-                    <tr key={s.index}>
-                      <td>{s.index + 1}</td>
-                      <td>{s.targetId + 1}</td>
-                      <td>{s.pointerType}</td>
-                      <td>
-                        {s.targetX.toFixed(2)}, {s.targetY.toFixed(2)}
-                      </td>
-                      <td>
-                        {s.pointerX.toFixed(2)}, {s.pointerY.toFixed(2)}
-                      </td>
-                      <td>
-                        {s.latencyMs}
-                        {s.promptRestarted ? '*' : ''}
-                      </td>
+            <section className="bento bento--dark">
+              <h2 className="tile__name">Not shown here, on purpose</h2>
+              <p className="note" style={{ color: 'var(--silver)' }}>
+                No reach map yet. Labelling a zone easy or hard needs you to tell us how it felt —
+                that question is the next thing to build. Guessing comfort from how fast you tapped
+                would not be honest.
+              </p>
+            </section>
+
+            <details className="bento raw">
+              <summary>Raw samples</summary>
+              <div className="raw__scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Pos</th>
+                      <th>Type</th>
+                      <th>Target x,y</th>
+                      <th>Tap x,y</th>
+                      <th>ms</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="card__note">Coordinates are fractions of the tap panel (0–1). * = clock restarted after the page was hidden.</p>
-          </details>
-        </>
-      )}
+                  </thead>
+                  <tbody>
+                    {samples.map((s) => (
+                      <tr key={s.index}>
+                        <td>{s.index + 1}</td>
+                        <td>{s.targetId + 1}</td>
+                        <td>{s.pointerType}</td>
+                        <td>
+                          {s.targetX.toFixed(2)}, {s.targetY.toFixed(2)}
+                        </td>
+                        <td>
+                          {s.pointerX.toFixed(2)}, {s.pointerY.toFixed(2)}
+                        </td>
+                        <td>
+                          {s.latencyMs}
+                          {s.promptRestarted ? '*' : ''}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="note">
+                Coordinates are fractions of the tray (0–1). * = the clock restarted after the page
+                was hidden.
+              </p>
+            </details>
+          </>
+        )}
 
-      <div className="row-actions">
-        <PillButton variant="secondary" arrow={false} onClick={exportNow}>
-          Download my data (JSON)
-        </PillButton>
-        <p className="card__note">Saved only to this device. Nothing is uploaded.</p>
+        <div className="bento switch-row" style={{ padding: 16 }}>
+          <div>
+            <div className="tile__name">Download what was recorded</div>
+            <div className="tile__sub">Saved to this device only. Nothing is uploaded.</div>
+          </div>
+          <button type="button" className="dock-btn" style={{ minHeight: 48, padding: '0 18px' }} onClick={exportNow}>
+            JSON
+          </button>
+        </div>
       </div>
     </Screen>
   );

@@ -1,12 +1,21 @@
-import { useState } from 'react';
-import { BagIcon, ChevronLeft } from '../components/ui';
+import { useState, type ReactElement } from 'react';
+import { ArrowLeft, BrandBar, MenuIcon, SearchIcon } from '../components/ui';
 import { CONTROL_LABELS, placementFor, type ControlId } from '../lib/layout';
 import type { Hand, Mode } from '../types';
 
+const ICONS: Record<ControlId, (p: { size?: number }) => ReactElement> = {
+  back: ArrowLeft,
+  search: SearchIcon,
+  menu: MenuIcon,
+};
+
 /**
- * Milestone-1 placement spike: the SAME two working controls (Back, Bag) render either in
- * the header (Standard) or in a lower rail on the chosen-hand side (K’ab). Switching is
- * explicit and reversible; demo state survives every switch.
+ * Milestone-2 placement demo: the SAME three working controls render either in the
+ * header (Original) or in a bottom rail on the chosen side (snerta.). Switching is
+ * explicit, reversible, and never happens mid-action. State survives every switch.
+ *
+ * This is a candidate layout for testing. Nothing here has been shown to be faster,
+ * easier or better — that is what the timed trials in the next milestone are for.
  */
 export function PlacementDemo({
   hand,
@@ -18,48 +27,91 @@ export function PlacementDemo({
   onExit: () => void;
 }) {
   const [mode, setMode] = useState<Mode>('standard');
-  const [bagCount, setBagCount] = useState(0);
-  const [presses, setPresses] = useState<Record<ControlId, number>>({ back: 0, bag: 0 });
-  const [lastAction, setLastAction] = useState('Nothing pressed yet.');
+  const [log, setLog] = useState<string>('Nothing pressed yet.');
+  const [presses, setPresses] = useState(0);
   const placement = placementFor(mode, hand);
+  const modeName = mode === 'kab' ? 'snerta.' : 'Original';
 
   const press = (id: ControlId) => {
-    setPresses((p) => ({ ...p, [id]: p[id] + 1 }));
-    setLastAction(
-      id === 'back'
-        ? `Back pressed (${mode === 'kab' ? 'K’ab' : 'Standard'} layout). In the full demo this returns to the previous page.`
-        : `Bag opened (${mode === 'kab' ? 'K’ab' : 'Standard'} layout) — ${bagCount} item${bagCount === 1 ? '' : 's'}.`,
+    setPresses((n) => n + 1);
+    setLog(`${CONTROL_LABELS[id]} pressed — ${modeName} layout.`);
+  };
+
+  const control = (id: ControlId, primary = false) => {
+    const Icon = ICONS[id];
+    return (
+      <button
+        key={id}
+        type="button"
+        className={`app-ctrl ${primary ? 'app-ctrl--primary' : ''}`}
+        onClick={() => press(id)}
+        aria-label={CONTROL_LABELS[id]}
+      >
+        <Icon size={20} />
+      </button>
     );
   };
 
-  const control = (id: ControlId) => (
-    <button
-      key={id}
-      type="button"
-      className={`app-ctrl app-ctrl--${id}`}
-      onClick={() => press(id)}
-      aria-label={id === 'bag' ? `${CONTROL_LABELS.bag}, ${bagCount} item${bagCount === 1 ? '' : 's'}` : CONTROL_LABELS.back}
-    >
-      {id === 'back' ? <ChevronLeft /> : <BagIcon />}
-      <span className="app-ctrl__label">{CONTROL_LABELS[id]}</span>
-      {id === 'bag' && bagCount > 0 && (
-        <span className="app-ctrl__badge" aria-hidden="true">
-          {bagCount}
-        </span>
-      )}
-    </button>
-  );
+  const inRail = placement.region === 'rail';
+  const railLead = placement.side === 'left' ? placement.order[0] : placement.order[placement.order.length - 1];
 
   return (
-    <main className={`demo demo--${mode} demo--${hand}`} aria-label="Layout demo">
-      <header className="app-header">
-        {placement.region === 'header' ? control('back') : <span className="app-ctrl-slot" />}
-        <span className="app-header__title">Shop</span>
-        {placement.region === 'header' ? control('bag') : <span className="app-ctrl-slot" />}
-      </header>
+    <main className="demo" aria-label="Layout demo">
+      <BrandBar>
+        <span className="chip">Before / after</span>
+      </BrandBar>
 
-      <div className="demo__body">
-        <div className="segmented" role="radiogroup" aria-label="Layout">
+      <div className="device">
+        <div className="device__screen">
+          <div className="fake-header">
+            {inRail ? (
+              <span className="fake-header__title">Inbox</span>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {control('back')}
+                  <span className="fake-header__title">Inbox</span>
+                </div>
+                <div style={{ display: 'flex', gap: 2 }}>
+                  {control('search')}
+                  {control('menu')}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="fake-list" aria-hidden="true">
+            {[62, 48, 70, 55, 66].map((w, i) => (
+              <div className="fake-row" key={i}>
+                <span className="fake-row__av" />
+                <span className="fake-row__lines">
+                  <span style={{ width: `${w}%` }} />
+                  <span style={{ width: `${w + 18}%` }} />
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {inRail && (
+            <nav className={`app-rail app-rail--${placement.side}`} aria-label="snerta controls">
+              {placement.order.map((id) => control(id, id === railLead))}
+            </nav>
+          )}
+        </div>
+      </div>
+
+      <section className="bento log">
+        <div className="tile__name">
+          {mode === 'standard' ? 'Controls in the header' : `Controls moved ${sideWord(placement.side)}`}
+        </div>
+        <p className="note">Which is easier for you has not been tested yet.</p>
+        <p className="note" aria-live="polite">
+          {log} · {presses} press{presses === 1 ? '' : 'es'} · hand set to {hand}
+        </p>
+      </section>
+
+      <div className="dock" style={{ flexDirection: 'column', gap: 10 }}>
+        <div role="radiogroup" aria-label="Compare layouts" className="segmented">
           {(['standard', 'kab'] as Mode[]).map((m) => (
             <button
               key={m}
@@ -69,50 +121,37 @@ export function PlacementDemo({
               className={`segmented__opt ${mode === m ? 'is-on' : ''}`}
               onClick={() => setMode(m)}
             >
-              {m === 'standard' ? 'Standard' : 'With K’ab'}
+              {m === 'standard' ? 'Original' : 'With snerta.'}
             </button>
           ))}
         </div>
-        <p className="card__note demo__explain">
-          {mode === 'standard'
-            ? 'Back and Bag sit in the header, where most apps put them.'
-            : `The same Back and Bag controls move to a lower rail on the ${hand} side. This is a fixed candidate layout for testing, not a measured fit.`}
-        </p>
-
-        <article className="product">
-          <div className="product__img" aria-hidden="true" />
-          <div className="product__meta">
-            <h2 className="product__name">Linen tote</h2>
-            <p className="product__price">Fictional item · no real purchase</p>
-          </div>
-          <button type="button" className="pill pill--primary pill--compact" onClick={() => setBagCount((n) => n + 1)}>
-            <span className="pill__label">Add to bag</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <button
+            type="button"
+            className="text-btn"
+            style={{ color: 'var(--silver)', textDecorationColor: 'var(--graphite)' }}
+            onClick={() => onHandChange(nextHand(hand))}
+          >
+            Switch hand ({hand})
           </button>
-        </article>
-
-        <section className="card" aria-live="polite">
-          <h2 className="card__title">Demo log</h2>
-          <p className="card__note">{lastAction}</p>
-          <p className="card__note">
-            Back pressed {presses.back}× · Bag pressed {presses.bag}× · {bagCount} in bag
-          </p>
-        </section>
-
-        <div className="demo__links">
-          <button type="button" className="text-btn" onClick={() => onHandChange(hand === 'right' ? 'left' : 'right')}>
-            Switch to {hand === 'right' ? 'left' : 'right'} hand
-          </button>
-          <button type="button" className="text-btn" onClick={onExit}>
-            Back to start
+          <button
+            type="button"
+            className="text-btn"
+            style={{ color: 'var(--silver)', textDecorationColor: 'var(--graphite)' }}
+            onClick={onExit}
+          >
+            Start over
           </button>
         </div>
       </div>
-
-      {placement.region === 'rail' && (
-        <nav className={`app-rail app-rail--${placement.side}`} aria-label="K’ab controls">
-          {placement.order.map(control)}
-        </nav>
-      )}
     </main>
   );
+}
+
+function sideWord(side: string): string {
+  return side === 'center' ? 'to the centre' : `to the ${side}`;
+}
+
+function nextHand(h: Hand): Hand {
+  return h === 'right' ? 'left' : h === 'left' ? 'both' : 'right';
 }

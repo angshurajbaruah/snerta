@@ -9,7 +9,7 @@ import {
   targetFraction,
   type GeometrySnapshot,
 } from '../lib/calibration';
-import { PillButton, Screen, TopBar } from '../components/ui';
+import { BackButton, BrandBar, PillButton, Screen, StepChip } from '../components/ui';
 import type { PanelObservation, TapSample } from '../types';
 
 export type CalibrationResult = {
@@ -22,9 +22,7 @@ export type CalibrationResult = {
 export function readGeometry(): GeometrySnapshot {
   const vv = typeof window !== 'undefined' ? window.visualViewport : null;
   const portrait =
-    typeof window !== 'undefined' && window.matchMedia
-      ? window.matchMedia('(orientation: portrait)').matches
-      : true;
+    typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(orientation: portrait)').matches : true;
   return {
     viewportW: document.documentElement.clientWidth || window.innerWidth,
     orientation: portrait ? 'portrait' : 'landscape',
@@ -32,60 +30,54 @@ export function readGeometry(): GeometrySnapshot {
   };
 }
 
-/** Some engines historically reported epoch-based timeStamp; fall back to performance.now() then. */
+/** Some engines report an epoch-based timeStamp; fall back to performance.now() then. */
 function eventTime(e: { timeStamp: number }): number {
   const now = performance.now();
   return e.timeStamp > 0 && Math.abs(now - e.timeStamp) < 10_000 ? e.timeStamp : now;
 }
 
-export function Calibrate({
-  onBack,
-  onComplete,
-}: {
-  onBack: () => void;
-  onComplete: (r: CalibrationResult) => void;
-}) {
+export function Calibrate({ onBack, onComplete }: { onBack: () => void; onComplete: (r: CalibrationResult) => void }) {
   const [phase, setPhase] = useState<'intro' | 'active'>('intro');
-  // Each start mounts a fresh run (new random sequence, new geometry baseline).
   const [run, setRun] = useState(0);
-  const panelRef = useRef<HTMLDivElement>(null);
 
   const start = useCallback(() => {
     setRun((r) => r + 1);
     setPhase('active');
   }, []);
 
-  return phase === 'intro' ? (
+  if (phase === 'active') return <CalibrationRun key={run} onExit={() => setPhase('intro')} onComplete={onComplete} />;
+
+  return (
     <Screen
-      label="Calibration"
-      className="screen--fit"
-      footer={
-        <div className="footer-stack">
+      label="Find your reach"
+      fit
+      dock={
+        <>
+          <BackButton onClick={onBack} />
           <PillButton onClick={start}>Start</PillButton>
-          <button type="button" className="text-btn" onClick={() => onComplete({ samples: [], observations: [], hiddenCount: 0, skipped: true })}>
-            Preview without touch calibration
-          </button>
-        </div>
+        </>
       }
     >
-      <TopBar onBack={onBack} step={2} />
-      <CalibrationIntro />
-      <TouchPanel panelRef={panelRef} active={null} />
+      <BrandBar>
+        <StepChip step={2} />
+      </BrandBar>
+      <div className="intro">
+        <h1 className="title">Find your natural reach.</h1>
+        <p className="lede">
+          Hold your phone the way you normally would in one hand. Tap each dot as it darkens — every
+          one, whether or not it feels easy. {SEQUENCE_LENGTH} taps. You can stop at any point.
+        </p>
+      </div>
+      <Tray active={null} />
+      <button
+        type="button"
+        className="text-btn"
+        style={{ alignSelf: 'center' }}
+        onClick={() => onComplete({ samples: [], observations: [], hiddenCount: 0, skipped: true })}
+      >
+        Skip — just show me the demo
+      </button>
     </Screen>
-  ) : (
-    <CalibrationRun key={run} onExit={() => setPhase('intro')} onComplete={onComplete} />
-  );
-}
-
-function CalibrationIntro() {
-  return (
-    <div className="intro">
-      <h1 className="title">Let’s find your natural reach.</h1>
-      <p className="lede">
-        Hold your phone as you normally would in one hand. Tap each dot as it darkens. 18 taps, no
-        rush, stop anytime.
-      </p>
-    </div>
   );
 }
 
@@ -93,10 +85,12 @@ function CalibrationRun({ onExit, onComplete }: { onExit: () => void; onComplete
   const [state, dispatch] = useReducer(calibrationReducer, undefined, () =>
     initialCalibration(makeSequence(), readGeometry()),
   );
-  const panelRef = useRef<HTMLDivElement>(null);
+  const trayRef = useRef<HTMLDivElement>(null);
   const target = activeTarget(state);
+  const done = state.status === 'complete';
+  const interrupted = state.status === 'interrupted';
 
-  // Start the prompt clock after the active target has been painted (double rAF).
+  // Start the prompt clock only once the active bead has actually been painted.
   useEffect(() => {
     if (state.status !== 'running' || state.paused || state.promptAt !== null) return;
     let r2 = 0;
@@ -109,7 +103,6 @@ function CalibrationRun({ onExit, onComplete }: { onExit: () => void; onComplete
     };
   }, [state.step, state.status, state.paused, state.promptAt]);
 
-  // Page hidden → pause; geometry change → interrupt.
   useEffect(() => {
     const onVis = () => dispatch({ type: document.hidden ? 'hidden' : 'visible' });
     const onGeo = () => dispatch({ type: 'geometry', now: readGeometry() });
@@ -126,20 +119,13 @@ function CalibrationRun({ onExit, onComplete }: { onExit: () => void; onComplete
   }, []);
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    // Suppress compatibility mouse events / double-tap zoom; we never listen to click.
-    if (e.cancelable) e.preventDefault();
-    const el = panelRef.current;
+    if (e.cancelable) e.preventDefault(); // suppress compat mouse events and double-tap zoom
+    const el = trayRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
     dispatch({
       type: 'pointerdown',
-      input: {
-        clientX: e.clientX,
-        clientY: e.clientY,
-        pointerType: e.pointerType,
-        isPrimary: e.isPrimary,
-        button: e.button,
-      },
+      input: { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType, isPrimary: e.isPrimary, button: e.button },
       rect: { left: r.left, top: r.top, width: r.width, height: r.height },
       at: eventTime(e),
       viewportW: window.innerWidth,
@@ -148,14 +134,11 @@ function CalibrationRun({ onExit, onComplete }: { onExit: () => void; onComplete
     });
   };
 
-  const done = state.status === 'complete';
-  const interrupted = state.status === 'interrupted';
-
   return (
     <Screen
-      label="Calibration"
-      className="screen--fit"
-      footer={
+      label="Find your reach"
+      fit
+      dock={
         done ? (
           <PillButton
             onClick={() =>
@@ -167,75 +150,91 @@ function CalibrationRun({ onExit, onComplete }: { onExit: () => void; onComplete
               })
             }
           >
-            Continue
+            Build my reach map
           </PillButton>
         ) : interrupted ? (
-          <PillButton onClick={onExit}>Restart calibration</PillButton>
+          <PillButton onClick={onExit}>Start again</PillButton>
         ) : (
-          <button type="button" className="text-btn text-btn--block" onClick={onExit}>
-            Stop and start over
-          </button>
+          <>
+            <BackButton onClick={onExit} label="Stop and start over" />
+            <span className="pill" style={{ opacity: 0.45, pointerEvents: 'none' }} aria-hidden="true">
+              Keep tapping
+            </span>
+          </>
         )
       }
     >
-      <TopBar onBack={onExit} step={2} />
-      <h1 className="title title--compact">Tap each dot as it darkens</h1>
-      <p className="counter" aria-live="polite">
-        {done
-          ? 'All 18 done. Thank you.'
-          : interrupted
-            ? 'Paused'
-            : state.paused
-              ? 'Paused while the page was hidden'
-              : `${state.step + 1} of ${SEQUENCE_LENGTH}`}
-      </p>
-      {interrupted && (
-        <p className="notice" role="alert">
-          <strong>Calibration stopped.</strong> {state.interruptionReason} Taps from different screen
-          shapes can’t be mixed, so this run was set aside. Hold the phone upright and restart.
-        </p>
-      )}
-      <TouchPanel
-        panelRef={panelRef}
+      <BrandBar>
+        <StepChip step={2} />
+      </BrandBar>
+      <div className="intro">
+        <h1 className="title">Tap each dot as it darkens.</h1>
+      </div>
+      <Tray
+        trayRef={trayRef}
         active={done || interrupted ? null : target}
+        donePositions={new Set(state.samples.map((s) => s.targetId))}
         onPointerDown={done || interrupted ? undefined : onPointerDown}
         dimmed={interrupted}
+        status={
+          done
+            ? `All ${SEQUENCE_LENGTH} done`
+            : interrupted
+              ? 'Stopped'
+              : state.paused
+                ? 'Paused'
+                : `${state.step + 1} of ${SEQUENCE_LENGTH}`
+        }
       />
+      {interrupted && (
+        <p className="alert" role="alert">
+          <strong>Calibration stopped.</strong> {state.interruptionReason} Taps from different screen
+          shapes can’t be mixed, so this run was set aside. Hold the phone upright and start again.
+        </p>
+      )}
     </Screen>
   );
 }
 
-function TouchPanel({
-  panelRef,
+function Tray({
+  trayRef,
   active,
+  donePositions,
   onPointerDown,
   dimmed = false,
+  status,
 }: {
-  panelRef: React.RefObject<HTMLDivElement | null>;
+  trayRef?: React.RefObject<HTMLDivElement | null>;
   active: number | null;
+  donePositions?: Set<number>;
   onPointerDown?: (e: ReactPointerEvent<HTMLDivElement>) => void;
   dimmed?: boolean;
+  status?: string;
 }) {
   return (
-    <div
-      ref={panelRef}
-      className={`touch-panel ${dimmed ? 'is-dimmed' : ''} ${onPointerDown ? 'is-live' : ''}`}
-      onPointerDown={onPointerDown}
-      onContextMenu={(e) => e.preventDefault()}
-      aria-hidden="true"
-      data-testid="touch-panel"
-    >
-      {Array.from({ length: TARGET_COUNT }, (_, id) => {
-        const f = targetFraction(id);
-        return (
-          <span
-            key={id}
-            className={`dot ${active === id ? 'is-active' : ''}`}
-            style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%` }}
-            data-target={id}
-          />
-        );
-      })}
+    <div className={`tray ${dimmed ? 'is-dimmed' : ''}`} onContextMenu={(e) => e.preventDefault()}>
+      <span className="tray__glow" aria-hidden="true" />
+      {status && (
+        <div className="tray__head">
+          <span className="count-chip" aria-live="polite">
+            {status}
+          </span>
+        </div>
+      )}
+      {/* The field alone is the measured surface, so the status chip never eats a tap. */}
+      <div ref={trayRef} className="tray__field" onPointerDown={onPointerDown} aria-hidden="true" data-testid="tray-field">
+        {Array.from({ length: TARGET_COUNT }, (_, id) => {
+          const f = targetFraction(id);
+          return (
+            <span
+              key={id}
+              className={`bead ${active === id ? 'is-active' : donePositions?.has(id) ? 'is-done' : ''}`}
+              style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%` }}
+              data-target={id}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

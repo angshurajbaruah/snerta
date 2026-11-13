@@ -1,23 +1,38 @@
 import { describe, expect, it } from 'vitest';
-import { placementFor } from '../src/lib/layout';
+import { nearestToThumb, placementFor } from '../src/lib/layout';
+import type { Hand } from '../src/types';
 import { buildSpikeExport, SCHEMA_VERSION } from '../src/lib/export';
 
 describe('placementFor', () => {
-  it('Standard keeps Back and Bag in the header regardless of hand', () => {
-    expect(placementFor('standard', 'left')).toEqual(placementFor('standard', 'right'));
-    expect(placementFor('standard', 'right').region).toBe('header');
+  const HANDS: Hand[] = ['left', 'right', 'both'];
+
+  it('Original keeps every control in the header, whichever hand', () => {
+    for (const h of HANDS) expect(placementFor('standard', h)).toMatchObject({ region: 'header' });
+    expect(placementFor('standard', 'left')).toEqual(placementFor('standard', 'both'));
   });
 
-  it('K’ab moves the same two controls to a lower rail on the chosen side', () => {
-    const r = placementFor('kab', 'right');
-    const l = placementFor('kab', 'left');
-    expect(r).toMatchObject({ region: 'rail', side: 'right' });
-    expect(l).toMatchObject({ region: 'rail', side: 'left' });
-    expect([...r.order].sort()).toEqual(['back', 'bag']);
-    expect([...l.order].sort()).toEqual(['back', 'bag']);
-    // Bag sits at the outer edge on each side
-    expect(r.order[r.order.length - 1]).toBe('bag');
-    expect(l.order[0]).toBe('bag');
+  it('moves the same three controls, never a different set', () => {
+    for (const h of HANDS) {
+      for (const m of ['standard', 'kab'] as const) {
+        expect([...placementFor(m, h).order].sort()).toEqual(['back', 'menu', 'search']);
+      }
+    }
+  });
+
+  it('snerta sends the rail to the chosen side, and to the centre when the hand varies', () => {
+    expect(placementFor('kab', 'right')).toMatchObject({ region: 'rail', side: 'right' });
+    expect(placementFor('kab', 'left')).toMatchObject({ region: 'rail', side: 'left' });
+    expect(placementFor('kab', 'both')).toMatchObject({ region: 'rail', side: 'center' });
+  });
+
+  it('puts Back nearest the thumb on either side, and mirrors the order', () => {
+    expect(nearestToThumb(placementFor('kab', 'right'))).toBe('back');
+    expect(nearestToThumb(placementFor('kab', 'left'))).toBe('back');
+    expect(placementFor('kab', 'left').order).toEqual([...placementFor('kab', 'right').order].reverse());
+  });
+
+  it('has no nearest-thumb control in the header layout', () => {
+    expect(nearestToThumb(placementFor('standard', 'right'))).toBeNull();
   });
 });
 

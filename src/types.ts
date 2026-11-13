@@ -1,4 +1,5 @@
-export type Hand = 'left' | 'right';
+/** 'both' = the person says they switch hands; controls stay near the centre. */
+export type Hand = 'left' | 'right' | 'both';
 export type Mode = 'standard' | 'kab';
 export type ReachLabel = 'unknown' | 'easy' | 'stretch' | 'hard';
 
