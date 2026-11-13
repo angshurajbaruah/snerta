@@ -100,9 +100,9 @@ export function PlacementDemo({
 
       <section className="bento log">
         <div className="tile__name">
-          {mode === 'standard' ? 'Controls in the header' : `Back and search moved ${sideWord(placement.side)}`}
+          {mode === 'standard' ? 'Controls in the header' : `Controls moved ${sideWord(placement.side)}`}
         </div>
-        <p className="note">Which is easier for you has not been tested yet.</p>
+        <p className="note note--wrap">Which is easier for you has not been tested yet.</p>
         <p className="note" aria-live="polite">
           {log} · {presses} press{presses === 1 ? '' : 'es'} · hand set to {hand}
         </p>

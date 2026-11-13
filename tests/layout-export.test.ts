@@ -16,11 +16,13 @@ describe('placementFor', () => {
     expect(placementFor('standard', 'left')).toEqual(placementFor('standard', 'both'));
   });
 
-  it('moves only back and search, and leaves the secondary action anchored up top', () => {
+  it('moves every control into the rail, leaving nothing behind in the header', () => {
+    // An earlier build held `menu` back. That made the snerta condition a hybrid and
+    // would have made a null result impossible to attribute.
     for (const h of HANDS) {
       const p = placementFor('kab', h);
-      expect([...p.rail].sort()).toEqual(['back', 'search']);
-      expect(p.header).toEqual(['menu']);
+      expect([...p.rail].sort()).toEqual(['back', 'menu', 'search']);
+      expect(p.header).toEqual([]);
     }
   });
 

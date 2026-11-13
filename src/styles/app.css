@@ -181,7 +181,7 @@ button {
 }
 /* Fixed box so toggling layouts never moves the device above it. */
 .log {
-  height: 104px;
+  height: 118px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -194,6 +194,14 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* The caveat is the same text in both layouts, so letting it wrap costs no
+   stability — and it must never be truncated into "has not been teste…". */
+.log .note--wrap {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 .intro {
   padding: 24px 6px 4px;

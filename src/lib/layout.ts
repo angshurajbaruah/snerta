@@ -12,16 +12,17 @@ export type Placement = {
 };
 
 /**
- * Only the frequent actions move. `menu` stays in the header in both layouts.
+ * Every control the task uses moves. Nothing stays anchored in the header.
  *
- * Moving every control into the thumb zone makes the rail wide enough to cover a
- * meaningful slice of the content, which is a cost the person would feel and would
- * reasonably hold against the layout — a confound that has nothing to do with reach.
- * Keeping the secondary action anchored also matches the claim actually being
- * tested: that a *few* frequent controls are worth moving.
+ * An earlier build moved only back and search, to keep the rail narrow. That made the
+ * snerta condition a hybrid: the person still reached up for the third control, which
+ * blunts the difference between the two layouts and makes a null result ambiguous —
+ * did the idea fail, or was only two thirds of it applied? Moving everything the task
+ * touches keeps the comparison clean. The rail covering content, which was the reason
+ * for holding one back, is handled by the list's reserved space and edge fade instead.
  */
-export const MOVABLE: ControlId[] = ['back', 'search'];
-export const ANCHORED: ControlId[] = ['menu'];
+export const MOVABLE: ControlId[] = ['back', 'search', 'menu'];
+export const ANCHORED: ControlId[] = [];
 export const CONTROLS: ControlId[] = [...MOVABLE, ...ANCHORED];
 
 export const CONTROL_LABELS: Record<ControlId, string> = {
@@ -34,9 +35,9 @@ export const CONTROL_LABELS: Record<ControlId, string> = {
  * Deterministic prototype rule — a candidate layout to test, not a measured optimum.
  *
  * Original: everything in the header, Back at the left, the rest at the right.
- * snerta:   back and search move to a bottom rail on the chosen side, with Back at
- *           the outer edge nearest the resting thumb. 'both' centres the rail, since
- *           no side is reliably nearer for someone who switches hands.
+ * snerta:   every control moves to a bottom rail on the chosen side, with Back at the
+ *           outer edge nearest the resting thumb. 'both' centres the rail, since no
+ *           side is reliably nearer for someone who switches hands.
  */
 export function placementFor(mode: Mode, hand: Hand): Placement {
   if (mode === 'standard') return { rail: [], header: CONTROLS, side: 'split' };

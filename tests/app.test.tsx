@@ -70,7 +70,7 @@ describe('Skip path and placement demo', () => {
     expect(document.querySelector('.demo')).toBeTruthy();
   });
 
-  it('moves back and search to the rail, leaves More up top, and reverts cleanly', () => {
+  it('moves every control to the rail and reverts cleanly', () => {
     toDemo('Right');
 
     const header = () => document.querySelector('.fake-header') as HTMLElement;
@@ -84,11 +84,10 @@ describe('Skip path and placement demo', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
 
-    // snerta: only the two frequent ones move. More stays anchored in the header,
-    // which keeps the rail narrow enough not to swallow the list.
+    // snerta: all three move, so the person never reaches up during the task.
     expect(rail()!.className).toMatch(/app-rail--right/);
-    expect(names(rail()!)).toEqual(['Back', 'Search']);
-    expect(names(header())).toEqual(['More']);
+    expect(names(rail()!)).toEqual(['Back', 'More', 'Search']);
+    expect(within(header()).queryByRole('button')).toBeNull();
 
     fireEvent.click(within(rail()!).getByRole('button', { name: 'Back' }));
     expect(screen.getByText(/Back pressed — snerta\. layout\./)).toBeTruthy();

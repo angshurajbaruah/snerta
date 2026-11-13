@@ -269,3 +269,16 @@ Left open: the snerta list has 96 px more bottom padding than Original's, so scr
 differs slightly between the two. Expected to be irrelevant to tasks that are about tapping a
 control rather than reaching the end of a list — recorded in DECISION_LOG D52 so a surprising
 trial result can be checked against it.
+
+## 2026-11-13 — Milestone 3c verification (sandbox)
+
+| Check | Result |
+|---|---|
+| All three controls in the rail, none left in the header | PASS (unit + component tests) |
+| No control lost or duplicated between layouts | PASS |
+| Last row clears the wider rail at the end of the scroll | PASS — 24 px gap |
+| Rail fits inside the phone frame | PASS at 393 px (47% wide) and 320 px (58% wide) |
+| Device shift when toggling layouts | 0 px at both 393 px and 320 px |
+| "has not been tested yet" truncated at 320 px | FAIL → fixed. Was clipped to "has not been teste…"; now wraps to two lines, unclipped at both widths. |
+| Unit + component tests | 79/79 |
+| Contrast audit, all screens | PASS |
