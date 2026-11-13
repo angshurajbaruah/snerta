@@ -70,42 +70,63 @@ describe('Skip path and placement demo', () => {
     expect(document.querySelector('.demo')).toBeTruthy();
   });
 
-  it('moves the same controls between header and rail, reversibly, keeping state', () => {
+  it('moves back and search to the rail, leaves More up top, and reverts cleanly', () => {
     toDemo('Right');
 
     const header = () => document.querySelector('.fake-header') as HTMLElement;
     const rail = () => document.querySelector('.app-rail') as HTMLElement | null;
     const names = (el: HTMLElement) =>
-      within(el)
-        .getAllByRole('button')
-        .map((b) => b.getAttribute('aria-label'))
-        .sort();
+      within(el).getAllByRole('button').map((b) => b.getAttribute('aria-label')).sort();
 
-    // Original: all three in the header, no rail
+    // Original: all three up top, no rail.
     expect(names(header())).toEqual(['Back', 'More', 'Search']);
     expect(rail()).toBeNull();
 
     fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
 
-    // snerta: the SAME three controls, now in a right-side rail and gone from the header
+    // snerta: only the two frequent ones move. More stays anchored in the header,
+    // which keeps the rail narrow enough not to swallow the list.
     expect(rail()!.className).toMatch(/app-rail--right/);
-    expect(names(rail()!)).toEqual(['Back', 'More', 'Search']);
-    expect(within(header()).queryByRole('button')).toBeNull();
+    expect(names(rail()!)).toEqual(['Back', 'Search']);
+    expect(names(header())).toEqual(['More']);
 
     fireEvent.click(within(rail()!).getByRole('button', { name: 'Back' }));
     expect(screen.getByText(/Back pressed — snerta\. layout\./)).toBeTruthy();
 
-    // Hand cycles right → left → both, and the rail follows
+    // Hand cycles right → left → both, and the rail follows.
     fireEvent.click(screen.getByRole('button', { name: /Switch hand/ }));
     expect(rail()!.className).toMatch(/app-rail--left/);
     fireEvent.click(screen.getByRole('button', { name: /Switch hand/ }));
     expect(rail()!.className).toMatch(/app-rail--center/);
 
-    // Reverting is instant and the press count survives
+    // Reverting is instant, nothing is lost, and the press count survives.
     fireEvent.click(screen.getByRole('radio', { name: 'Original' }));
     expect(rail()).toBeNull();
     expect(names(header())).toEqual(['Back', 'More', 'Search']);
     expect(screen.getByText(/1 press ·/)).toBeTruthy();
+  });
+
+  it('reserves room below the list so the last row clears the rail', () => {
+    toDemo('Right');
+    const screenEl = () => document.querySelector('.device__screen') as HTMLElement;
+    expect(screenEl().classList.contains('has-rail')).toBe(false);
+    expect(document.querySelector('.fake-edge--bottom')).toBeNull();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
+    // The class is what carries the extra bottom padding in CSS; the fade sits with it.
+    expect(screenEl().classList.contains('has-rail')).toBe(true);
+    expect(document.querySelector('.fake-edge--bottom')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Original' }));
+    expect(screenEl().classList.contains('has-rail')).toBe(false);
+    expect(document.querySelector('.fake-edge--bottom')).toBeNull();
+  });
+
+  it('fades the top edge in both layouts, so neither looks chopped', () => {
+    toDemo('Right');
+    expect(document.querySelector('.fake-edge--top')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
+    expect(document.querySelector('.fake-edge--top')).toBeTruthy();
   });
 });
 

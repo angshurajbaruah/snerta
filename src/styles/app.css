@@ -949,6 +949,7 @@ button {
 }
 .device__screen {
   position: relative;
+  isolation: isolate;
   height: 100%;
   border-radius: 30px;
   overflow: hidden;
@@ -959,13 +960,23 @@ button {
   flex-direction: column;
 }
 .fake-header {
-  min-height: 56px;
-  padding: 10px 8px 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  height: 56px;
+  padding: 8px 8px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  flex: none;
+}
+.fake-header__left,
+.fake-header__right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 .fake-header__title {
   font-size: 17px;
@@ -973,13 +984,43 @@ button {
   padding-left: 10px;
 }
 .fake-list {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 16px 16px 0;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  /* Content starts below the header and, with a rail, ends clear of it: the last row
+     can scroll fully into view instead of sitting under the buttons. Found on a real
+     phone — text disappearing under the rail reads as the layout being worse, which
+     would be a confound with nothing to do with reach. */
+  padding: 64px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.device__screen.has-rail .fake-list {
+  padding-bottom: 96px;
+}
+
+/* A standing fade where the list passes under the chrome, at both ends and at every
+   scroll position, so text dims into the page instead of being cut off. */
+.fake-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.fake-edge--top {
+  top: 48px;
+  height: 28px;
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.86) 45%, rgba(255, 255, 255, 0) 100%);
+}
+.fake-edge--bottom {
+  bottom: 0;
+  height: 104px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 42%, #ffffff 76%);
 }
 .fake-row {
   display: flex;
@@ -1053,6 +1094,7 @@ button {
 }
 .app-rail {
   position: absolute;
+  z-index: 6;
   bottom: 14px;
   min-height: 58px;
   padding: 6px;

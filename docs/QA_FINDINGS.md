@@ -253,3 +253,19 @@ reporting looks like. This run validates the *instrument*, not the idea.
 
 **For the five-person study: do not state the hypothesis, do not say which direction counts
 as a good result, and do not show anyone this map before they give their own labels.**
+
+## 2026-11-13 — Milestone 3b verification (sandbox)
+
+| Check | Result |
+|---|---|
+| Rail covering the last rows of the list | FAIL → fixed. Scrolled fully to the end, last row bottom 297 px vs rail top 321 px: a 24 px gap. |
+| Fade present at the top edge in both layouts | PASS |
+| Fade above the rail, at every scroll position | PASS |
+| Controls moved | back + search only; More stays in the header. No control is lost or duplicated between layouts (unit test). |
+| Unit + component tests | 79/79 |
+| Contrast audit, all screens | PASS |
+
+Left open: the snerta list has 96 px more bottom padding than Original's, so scroll length
+differs slightly between the two. Expected to be irrelevant to tasks that are about tapping a
+control rather than reaching the end of a list — recorded in DECISION_LOG D52 so a surprising
+trial result can be checked against it.

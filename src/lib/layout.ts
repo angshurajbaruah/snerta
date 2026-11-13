@@ -1,18 +1,28 @@
 import type { Hand, Mode } from '../types';
 
 export type ControlId = 'back' | 'search' | 'menu';
-export type Region = 'header' | 'rail';
 export type Side = 'left' | 'right' | 'center' | 'split';
 
 export type Placement = {
-  region: Region;
-  /** Visual order inside the region, left to right. */
-  order: ControlId[];
+  /** Controls sitting in the bottom rail. Empty in the Original layout. */
+  rail: ControlId[];
+  /** Controls sitting in the top header. */
+  header: ControlId[];
   side: Side;
 };
 
-/** The three controls the demo app moves. Same controls, same actions, in both layouts. */
-export const CONTROLS: ControlId[] = ['back', 'search', 'menu'];
+/**
+ * Only the frequent actions move. `menu` stays in the header in both layouts.
+ *
+ * Moving every control into the thumb zone makes the rail wide enough to cover a
+ * meaningful slice of the content, which is a cost the person would feel and would
+ * reasonably hold against the layout — a confound that has nothing to do with reach.
+ * Keeping the secondary action anchored also matches the claim actually being
+ * tested: that a *few* frequent controls are worth moving.
+ */
+export const MOVABLE: ControlId[] = ['back', 'search'];
+export const ANCHORED: ControlId[] = ['menu'];
+export const CONTROLS: ControlId[] = [...MOVABLE, ...ANCHORED];
 
 export const CONTROL_LABELS: Record<ControlId, string> = {
   back: 'Back',
@@ -21,37 +31,25 @@ export const CONTROL_LABELS: Record<ControlId, string> = {
 };
 
 /**
- * Deterministic prototype rule — a candidate layout to test, not a measured or optimised fit.
+ * Deterministic prototype rule — a candidate layout to test, not a measured optimum.
  *
- * Standard: Back at the top-left, Search and More at the top-right (the common convention).
- * snerta:   the same three controls move to a bottom rail.
- *             right hand → rail on the right, primary action nearest the outer edge
- *             left hand  → mirrored
- *             both       → rail centred, because no single side is reliably nearer
- *
- * The 'both' arm is deliberately conservative: a centred rail is still in the lower
- * thumb arc for either hand, without betting on a side the person did not claim.
+ * Original: everything in the header, Back at the left, the rest at the right.
+ * snerta:   back and search move to a bottom rail on the chosen side, with Back at
+ *           the outer edge nearest the resting thumb. 'both' centres the rail, since
+ *           no side is reliably nearer for someone who switches hands.
  */
 export function placementFor(mode: Mode, hand: Hand): Placement {
-  if (mode === 'standard') return { region: 'header', order: CONTROLS, side: 'split' };
-  switch (hand) {
-    // Back is the most-used control, so it takes the slot nearest the resting thumb:
-    // the outer edge of the rail. The other two mirror around it.
-    case 'right':
-      return { region: 'rail', order: ['menu', 'search', 'back'], side: 'right' };
-    case 'left':
-      return { region: 'rail', order: ['back', 'search', 'menu'], side: 'left' };
-    case 'both':
-      return { region: 'rail', order: ['back', 'search', 'menu'], side: 'center' };
-  }
+  if (mode === 'standard') return { rail: [], header: CONTROLS, side: 'split' };
+  const rail = hand === 'right' ? [...MOVABLE].reverse() : [...MOVABLE];
+  return { rail, header: ANCHORED, side: hand === 'both' ? 'center' : hand };
 }
 
-/** Which control sits closest to where the thumb rests, for the rail layouts. */
+/** Which rail control sits closest to where the thumb rests. */
 export function nearestToThumb(placement: Placement): ControlId | null {
-  if (placement.region !== 'rail') return null;
-  if (placement.side === 'left') return placement.order[0];
-  if (placement.side === 'right') return placement.order[placement.order.length - 1];
-  return placement.order[Math.floor(placement.order.length / 2)];
+  if (placement.rail.length === 0) return null;
+  if (placement.side === 'left') return placement.rail[0];
+  if (placement.side === 'right') return placement.rail[placement.rail.length - 1];
+  return placement.rail[Math.floor(placement.rail.length / 2)];
 }
 
 export const HAND_LABELS: Record<Hand, string> = {

@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { ArrowLeft, BrandBar, MenuIcon, SearchIcon } from '../components/ui';
-import { CONTROL_LABELS, placementFor, type ControlId } from '../lib/layout';
+import { CONTROL_LABELS, nearestToThumb, placementFor, type ControlId } from '../lib/layout';
 import type { Hand, Mode } from '../types';
 
 const ICONS: Record<ControlId, (p: { size?: number }) => ReactElement> = {
@@ -52,8 +52,8 @@ export function PlacementDemo({
     );
   };
 
-  const inRail = placement.region === 'rail';
-  const railLead = placement.side === 'left' ? placement.order[0] : placement.order[placement.order.length - 1];
+  const inRail = placement.rail.length > 0;
+  const thumbLead = nearestToThumb(placement);
 
   return (
     <main className="demo" aria-label="Layout demo">
@@ -62,39 +62,37 @@ export function PlacementDemo({
       </BrandBar>
 
       <div className="device">
-        <div className="device__screen">
+        <div className={`device__screen ${inRail ? 'has-rail' : ''}`}>
           <div className="fake-header">
-            {inRail ? (
+            <div className="fake-header__left">
+              {placement.header.includes('back') && control('back')}
               <span className="fake-header__title">Inbox</span>
-            ) : (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  {control('back')}
-                  <span className="fake-header__title">Inbox</span>
-                </div>
-                <div style={{ display: 'flex', gap: 2 }}>
-                  {control('search')}
-                  {control('menu')}
-                </div>
-              </>
-            )}
+            </div>
+            <div className="fake-header__right">
+              {placement.header.filter((id) => id !== 'back').map((id) => control(id))}
+            </div>
           </div>
 
           <div className="fake-list" aria-hidden="true">
-            {[62, 48, 70, 55, 66].map((w, i) => (
+            {[62, 48, 70, 55, 66, 51, 73, 59, 64].map((w, i) => (
               <div className="fake-row" key={i}>
                 <span className="fake-row__av" />
                 <span className="fake-row__lines">
                   <span style={{ width: `${w}%` }} />
-                  <span style={{ width: `${w + 18}%` }} />
+                  <span style={{ width: `${Math.min(w + 18, 96)}%` }} />
                 </span>
               </div>
             ))}
           </div>
 
+          {/* The list scrolls under the chrome at both ends, so it is faded into the
+              page rather than chopped off. Present the whole time, not only at rest. */}
+          <span className="fake-edge fake-edge--top" aria-hidden="true" />
+          {inRail && <span className="fake-edge fake-edge--bottom" aria-hidden="true" />}
+
           {inRail && (
             <nav className={`app-rail app-rail--${placement.side}`} aria-label="snerta controls">
-              {placement.order.map((id) => control(id, id === railLead))}
+              {placement.rail.map((id) => control(id, id === thumbLead))}
             </nav>
           )}
         </div>
@@ -102,7 +100,7 @@ export function PlacementDemo({
 
       <section className="bento log">
         <div className="tile__name">
-          {mode === 'standard' ? 'Controls in the header' : `Controls moved ${sideWord(placement.side)}`}
+          {mode === 'standard' ? 'Controls in the header' : `Back and search moved ${sideWord(placement.side)}`}
         </div>
         <p className="note">Which is easier for you has not been tested yet.</p>
         <p className="note" aria-live="polite">

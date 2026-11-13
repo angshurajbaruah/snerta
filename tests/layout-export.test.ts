@@ -7,32 +7,45 @@ import type { ReachLabel } from '../src/types';
 describe('placementFor', () => {
   const HANDS: Hand[] = ['left', 'right', 'both'];
 
-  it('Original keeps every control in the header, whichever hand', () => {
-    for (const h of HANDS) expect(placementFor('standard', h)).toMatchObject({ region: 'header' });
+  it('Original keeps every control in the header and has no rail at all', () => {
+    for (const h of HANDS) {
+      const p = placementFor('standard', h);
+      expect(p.rail).toEqual([]);
+      expect([...p.header].sort()).toEqual(['back', 'menu', 'search']);
+    }
     expect(placementFor('standard', 'left')).toEqual(placementFor('standard', 'both'));
   });
 
-  it('moves the same three controls, never a different set', () => {
+  it('moves only back and search, and leaves the secondary action anchored up top', () => {
+    for (const h of HANDS) {
+      const p = placementFor('kab', h);
+      expect([...p.rail].sort()).toEqual(['back', 'search']);
+      expect(p.header).toEqual(['menu']);
+    }
+  });
+
+  it('never loses or duplicates a control between the two layouts', () => {
     for (const h of HANDS) {
       for (const m of ['standard', 'kab'] as const) {
-        expect([...placementFor(m, h).order].sort()).toEqual(['back', 'menu', 'search']);
+        const p = placementFor(m, h);
+        expect([...p.rail, ...p.header].sort()).toEqual(['back', 'menu', 'search']);
       }
     }
   });
 
-  it('snerta sends the rail to the chosen side, and to the centre when the hand varies', () => {
-    expect(placementFor('kab', 'right')).toMatchObject({ region: 'rail', side: 'right' });
-    expect(placementFor('kab', 'left')).toMatchObject({ region: 'rail', side: 'left' });
-    expect(placementFor('kab', 'both')).toMatchObject({ region: 'rail', side: 'center' });
+  it('sends the rail to the chosen side, and to the centre when the hand varies', () => {
+    expect(placementFor('kab', 'right').side).toBe('right');
+    expect(placementFor('kab', 'left').side).toBe('left');
+    expect(placementFor('kab', 'both').side).toBe('center');
   });
 
-  it('puts Back nearest the thumb on either side, and mirrors the order', () => {
+  it('puts Back nearest the resting thumb on either side, mirroring the order', () => {
     expect(nearestToThumb(placementFor('kab', 'right'))).toBe('back');
     expect(nearestToThumb(placementFor('kab', 'left'))).toBe('back');
-    expect(placementFor('kab', 'left').order).toEqual([...placementFor('kab', 'right').order].reverse());
+    expect(placementFor('kab', 'left').rail).toEqual([...placementFor('kab', 'right').rail].reverse());
   });
 
-  it('has no nearest-thumb control in the header layout', () => {
+  it('has no nearest-thumb control when nothing moved', () => {
     expect(nearestToThumb(placementFor('standard', 'right'))).toBeNull();
   });
 });
