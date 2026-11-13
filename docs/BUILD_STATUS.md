@@ -1,6 +1,6 @@
 # build status
 
-**Updated:** 2026-11-13 · **Milestone:** 0–1 (spike) + 2a (rebrand) + 2b (calibration rebuilt) + 2c (new symbol)
+**Updated:** 2026-11-13 · **Milestone:** 0–1 (spike) + 2a–2c (rebrand, calibration rebuilt, new symbol) + 3 (comfort self-report and reach map)
 **Git:** `angshurajbaruah/snerta`, branch `main`.
 
 ## Toolchain (actual)
@@ -9,13 +9,14 @@ Node 22.23.4 · npm 10.9.9 · React 19 · Vite 8.3 · Vitest 5.1 · TypeScript 5
 ## What exists
 - Welcome → Hand selection (left / right / switches) → calibration (full-screen tray, 15
   positions × 2 randomized passes = 30 prompted taps, after 3 unrecorded practice taps) →
-  "What was recorded" → Original / With snerta. placement demo.
+  comfort self-report (15 zones, Unknown by default, plus an optional grip question) →
+  reach map → Original / With snerta. placement demo.
 - Skip path, clearly labelled as measuring nothing.
 - Opt-in local JSON download (`schemaVersion: kab-spike-0.1`).
 - No backend, storage, cookies, analytics, fonts-from-CDN or any network call.
 
 ## Verified (cloud sandbox, not a phone)
-- `npm test` → 3 files, 38 tests passed.
+- `npm test` → 5 files, 72 tests passed.
 - `npm run build` → typecheck + production build pass (JS 245 kB / 76 kB gzip, CSS 19 kB).
 - `scripts/smoke-touch.cjs`, headless Chromium with iPhone 13 emulation → 18 accepted touch
   taps, 1 stray in-tray touch logged as an observation, readout reports touch. **Emulated.**
@@ -41,10 +42,10 @@ the middle, top-left 1993 ms. See `docs/QA_FINDINGS.md`.
 - VoiceOver / TalkBack, 200% browser zoom.
 
 ## Next
-The comfort self-report. It is the control for the latency gradient, not just a screen:
-top-left measured 3x the middle, and only the person can say whether that is difficulty or
-simply distance from where their eyes were.
+Run the self-report on the phone and settle the prediction written down in QA_FINDINGS before
+the question existed: top-left measured 3.1x the middle, so does it come back **Hard**
+(difficulty is real) or **Easy** (the latency was mostly looking)? After that, the task flow
+and the counterbalanced timed trials.
 
 ## Not built yet (by plan)
-Comfort self-report, reach map, Your setup screen, the task flow, counterbalanced timed
-trials, results, full export/reset.
+Your setup screen, the task flow, counterbalanced timed trials, results, full reset.

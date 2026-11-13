@@ -694,6 +694,166 @@ button {
   flex: none;
 }
 
+/* ---------- Self-report grid and reach map ----------
+   Easy is dark and hard is light, following the design canvas: the dark area is
+   where the thumb lives. Lightness is never the only cue — every cell carries its
+   label as text, and the legend repeats it. */
+.label-grid {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+  aspect-ratio: 0.72;
+}
+.label-cell {
+  border: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  /* 44px minimum is met by the grid's own cell size at every supported width. */
+  min-height: 44px;
+}
+.label-grid--static .label-cell {
+  cursor: default;
+  min-height: 34px;
+}
+.label-cell.is-unknown {
+  background: var(--mist-2);
+  /* The dash is the only visual cue that a zone is unlabelled, so it has to clear AA.
+     --steel on --mist-2 was 2.93:1. */
+  color: var(--graphite);
+  box-shadow: var(--press-sm);
+}
+.label-cell.is-easy {
+  background: var(--grad-dark);
+  color: var(--white);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 14px -8px rgba(10, 10, 11, 0.6);
+}
+.label-cell.is-stretch {
+  background: linear-gradient(180deg, #b9bac0 0%, #9a9ba1 100%);
+  color: var(--obsidian);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.label-cell.is-hard {
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--silver), 0 2px 6px -3px rgba(10, 10, 11, 0.3);
+}
+
+.legend {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--graphite);
+}
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex: none;
+}
+.legend__swatch.is-easy {
+  background: var(--grad-dark);
+}
+.legend__swatch.is-stretch {
+  background: linear-gradient(180deg, #b9bac0, #9a9ba1);
+}
+.legend__swatch.is-hard {
+  background: var(--white);
+  box-shadow: inset 0 0 0 1.5px var(--silver);
+}
+.legend__swatch.is-unknown {
+  background: var(--mist-2);
+  box-shadow: var(--press-sm);
+}
+
+.label-grid--time {
+  aspect-ratio: 0.9;
+}
+.time-cell {
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  min-height: 30px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.time-cell.is-slowest {
+  box-shadow: inset 0 0 0 2px var(--white);
+}
+.time-cell.is-quickest {
+  box-shadow: inset 0 0 0 2px var(--steel);
+}
+
+.choice-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.choice {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--mist-2);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.choice.is-on {
+  background: var(--grad-dark);
+  color: var(--white);
+}
+.choice .radio {
+  box-shadow: inset 0 0 0 2px var(--steel);
+}
+.choice.is-on .radio {
+  box-shadow: inset 0 0 0 2px var(--white);
+}
+.choice.is-on .radio__dot {
+  background: var(--white);
+}
+
+.mismatch {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--graphite);
+}
+.mismatch li + li {
+  margin-top: 6px;
+}
+.bento--dark .mismatch {
+  color: var(--silver);
+}
+
 /* ---------- Readout ---------- */
 .zone-grid {
   margin-top: 12px;

@@ -62,14 +62,16 @@ describe('Skip path and placement demo', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Skip — just show me the demo' }));
   }
 
-  it('labels a skipped calibration honestly — nothing measured', () => {
+  it('a skipped calibration goes straight to the demo, with nothing to report on', () => {
     toDemo('Right');
-    expect(screen.getByText(/You skipped calibration, so nothing was measured/)).toBeTruthy();
+    // No comfort question and no map: there is nothing measured to label.
+    expect(screen.queryByText(/How did each area feel/)).toBeNull();
+    expect(screen.queryByText(/Your reach map/)).toBeNull();
+    expect(document.querySelector('.demo')).toBeTruthy();
   });
 
   it('moves the same controls between header and rail, reversibly, keeping state', () => {
     toDemo('Right');
-    fireEvent.click(screen.getByRole('button', { name: 'See the layouts' }));
 
     const header = () => document.querySelector('.fake-header') as HTMLElement;
     const rail = () => document.querySelector('.app-rail') as HTMLElement | null;
@@ -136,7 +138,6 @@ describe('Comparison stability', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     fireEvent.click(screen.getByRole('button', { name: 'Skip — just show me the demo' }));
-    fireEvent.click(screen.getByRole('button', { name: 'See the layouts' }));
 
     const children = Array.from(document.querySelector('.demo')!.children);
     const deviceAt = children.findIndex((c) => c.classList.contains('device'));

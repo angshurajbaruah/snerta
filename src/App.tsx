@@ -2,17 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { Welcome } from './screens/Welcome';
 import { HandSelect } from './screens/HandSelect';
 import { Calibrate, type CalibrationResult } from './screens/Calibrate';
-import { SpikeReadout } from './screens/SpikeReadout';
+import { ComfortReport, type ComfortResult } from './screens/ComfortReport';
+import { ReachMap } from './screens/ReachMap';
 import { PlacementDemo } from './screens/PlacementDemo';
 import type { Hand } from './types';
 
-type Route = 'welcome' | 'hand' | 'calibrate' | 'readout' | 'demo';
+type Route = 'welcome' | 'hand' | 'calibrate' | 'comfort' | 'map' | 'demo';
 
 /** All session state lives in memory. Refreshing the page clears it — by design. */
 export function App() {
   const [route, setRoute] = useState<Route>('welcome');
   const [hand, setHand] = useState<Hand | null>(null);
   const [calibration, setCalibration] = useState<CalibrationResult | null>(null);
+  const [comfort, setComfort] = useState<ComfortResult | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Move focus to the new screen's heading for screen-reader and keyboard users.
@@ -36,12 +38,28 @@ export function App() {
           onBack={() => setRoute('hand')}
           onComplete={(r) => {
             setCalibration(r);
-            setRoute('readout');
+            // Nothing was measured on a skip, so there is nothing to report on.
+            setRoute(r.skipped ? 'demo' : 'comfort');
           }}
         />
       )}
-      {route === 'readout' && calibration && (
-        <SpikeReadout hand={hand} result={calibration} onBack={() => setRoute('calibrate')} onContinue={() => setRoute('demo')} />
+      {route === 'comfort' && (
+        <ComfortReport
+          onBack={() => setRoute('calibrate')}
+          onComplete={(r) => {
+            setComfort(r);
+            setRoute('map');
+          }}
+        />
+      )}
+      {route === 'map' && calibration && comfort && (
+        <ReachMap
+          hand={hand}
+          calibration={calibration}
+          comfort={comfort}
+          onBack={() => setRoute('comfort')}
+          onContinue={() => setRoute('demo')}
+        />
       )}
       {route === 'demo' && hand && (
         <PlacementDemo hand={hand} onHandChange={setHand} onExit={() => setRoute('welcome')} />

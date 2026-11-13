@@ -47,8 +47,26 @@ const AUDIT = `(() => {
     ['welcome', async () => {}],
     ['hand', async () => { await p.getByRole('button', { name: 'Get started' }).tap(); }],
     ['cal-intro', async () => { await p.getByRole('radio', { name: 'Right' }).tap(); await p.getByRole('button', { name: 'Continue' }).tap(); }],
-    ['readout', async () => { await p.getByRole('button', { name: 'Skip — just show me the demo' }).tap(); }],
-    ['demo', async () => { await p.getByRole('button', { name: 'See the layouts' }).tap(); }],
+    ['cal-run', async () => { await p.getByRole('button', { name: 'Start' }).tap(); }],
+    ['comfort', async () => {
+      for (let i = 0; i < 33; i++) {
+        const box = await p.locator('.bead.is-active').boundingBox().catch(() => null);
+        if (!box) break;
+        await p.waitForTimeout(30);
+        await p.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+      }
+      await p.waitForTimeout(200);
+      await p.getByRole('button', { name: 'Continue' }).tap();
+    }],
+    ['comfort-filled', async () => {
+      const cells = p.locator('.label-cell');
+      for (const [i, taps] of [[0, 1], [3, 2], [12, 3]]) {
+        for (let t = 0; t < taps; t++) { await cells.nth(i).tap(); await p.waitForTimeout(40); }
+      }
+      await p.getByRole('radio', { name: /shifted my grip/ }).tap();
+    }],
+    ['reach-map', async () => { await p.getByRole('button', { name: 'See my reach map' }).tap(); }],
+    ['demo', async () => { await p.getByRole('button', { name: 'Try the layouts' }).tap(); }],
     ['demo-snerta', async () => { await p.getByRole('radio', { name: 'With snerta.' }).tap(); }],
   ];
   await p.goto('http://localhost:4173/');
