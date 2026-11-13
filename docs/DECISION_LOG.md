@@ -71,3 +71,11 @@ Dated, newest last. Product/brand decisions from the brief are locked; this log 
 | D43 | Export schema → **`snerta-0.2`**. Adds `selfReport` (per zone, unknowns preserved), `gripChanged`, and `latencyByZoneMs` as a sibling field, with a limitation line stating neither was derived from the other. | A reader of the file must be able to see that the labels are the person's and the timings are the machine's. | Yes |
 | D44 | A skipped calibration goes **straight to the demo**: no comfort question, no map. | There is nothing measured to label, and asking anyway would invite a map built on nothing. | Yes |
 | D45 | Easy renders dark, Hard light, following the canvas's Natural/Stretch/Hard legend — but every cell carries its label as text and the legend repeats it. The unlabelled dash was darkened from `--steel` to `--graphite` after the audit measured it at 2.93:1. | Greyscale only, and never colour alone. The audit caught the dash; it is the sole visual cue for an unlabelled zone, so it has to clear AA. | Yes |
+
+## 2026-11-13 — Milestone 3a: after the first self-report run
+
+| # | Decision | Why | Reversible? |
+|---|---|---|---|
+| D46 | A disagreement is reported only when **every tap in the zone** clears the threshold, not just the zone's average. | Two taps per zone means the average moves a lot on one pause. The third run's only reported disagreement, lower-middle-right at 1.62x, came from taps of 743 and 1639 ms — an artefact, not a finding. Under the new rule the run correctly reports none. | Yes — threshold |
+| D47 | Per-zone timings stay in the UI but are to be read as indicative. Rows (6 taps) and columns (10 taps) are the level that carries weight. | Median within-zone gap was 254 ms on numbers around 700 ms. A single cell is too noisy to carry a claim; a row is not. | — |
+| D48 | Passes stay at 2 (30 taps, 24 s) rather than 3 (45 taps). | A third pass would cut the per-zone noise but adds ~12 s to a task five strangers have to sit through. The row and column levels are already stable: top-to-middle ratio was 1.85x and 1.80x across two independent runs. | Yes |

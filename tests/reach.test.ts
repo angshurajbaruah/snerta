@@ -9,6 +9,7 @@ import {
   nextLabel,
   rankZones,
   reportCounts,
+  samplesByZone,
   zoneName,
 } from '../src/lib/reach';
 import type { ReachLabel, TapSample } from '../src/types';
@@ -143,5 +144,47 @@ describe('comfort is never inferred from timing', () => {
     expect(findMismatches(labels, wild)).toEqual([]);
     expect(reportCounts(labels).unknown).toBe(TARGET_COUNT);
     expect(isReportEmpty(labels)).toBe(true);
+  });
+});
+
+describe('a disagreement has to hold across every tap in the zone', () => {
+  const labels = (spec: Partial<Record<number, ReachLabel>>): ReachLabel[] =>
+    Array.from({ length: TARGET_COUNT }, (_, i) => spec[i] ?? 'unknown');
+  const latency = (spec: Partial<Record<number, number>>): (number | null)[] =>
+    Array.from({ length: TARGET_COUNT }, (_, i) => spec[i] ?? 600);
+  const perZone = (spec: Partial<Record<number, number[]>>): number[][] =>
+    Array.from({ length: TARGET_COUNT }, (_, i) => spec[i] ?? [600, 600]);
+
+  it('ignores a zone carried over the line by one slow tap', () => {
+    // Real case, 2026-11-13: lower-middle-right averaged 1.62x off taps of 743 and 1639 ms.
+    const found = findMismatches(
+      labels({ 11: 'easy' }),
+      latency({ 11: 1191 }),
+      { perZone: perZone({ 11: [743, 1639] }) },
+    );
+    expect(found).toEqual([]);
+  });
+
+  it('still reports a zone that was slow on every tap', () => {
+    const found = findMismatches(
+      labels({ 0: 'easy' }),
+      latency({ 0: 1800 }),
+      { perZone: perZone({ 0: [1700, 1900] }) },
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0].zoneId).toBe(0);
+  });
+
+  it('falls back to the zone median when the individual taps are not supplied', () => {
+    expect(findMismatches(labels({ 0: 'easy' }), latency({ 0: 1800 }))).toHaveLength(1);
+  });
+});
+
+describe('samplesByZone', () => {
+  it('keeps every usable tap per zone and drops restarted ones', () => {
+    const by = samplesByZone([sample(0, 500), sample(0, 900), sample(0, 4000, true), sample(2, 700)]);
+    expect(by[0]).toEqual([500, 900]);
+    expect(by[2]).toEqual([700]);
+    expect(by[1]).toEqual([]);
   });
 });

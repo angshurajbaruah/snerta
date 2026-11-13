@@ -16,7 +16,7 @@ Node 22.23.4 · npm 10.9.9 · React 19 · Vite 8.3 · Vitest 5.1 · TypeScript 5
 - No backend, storage, cookies, analytics, fonts-from-CDN or any network call.
 
 ## Verified (cloud sandbox, not a phone)
-- `npm test` → 5 files, 72 tests passed.
+- `npm test` → 5 files, 76 tests passed.
 - `npm run build` → typecheck + production build pass (JS 245 kB / 76 kB gzip, CSS 19 kB).
 - `scripts/smoke-touch.cjs`, headless Chromium with iPhone 13 emulation → 18 accepted touch
   taps, 1 stray in-tray touch logged as an observation, readout reports touch. **Emulated.**
@@ -42,10 +42,12 @@ the middle, top-left 1993 ms. See `docs/QA_FINDINGS.md`.
 - VoiceOver / TalkBack, 200% browser zoom.
 
 ## Next
-Run the self-report on the phone and settle the prediction written down in QA_FINDINGS before
-the question existed: top-left measured 3.1x the middle, so does it come back **Hard**
-(difficulty is real) or **Easy** (the latency was mostly looking)? After that, the task flow
-and the counterbalanced timed trials.
+The instrument is validated as far as one person can validate it. Next is the experiment
+itself: the task flow, then two counterbalanced timed trials with a comfort rating after
+each, then honest results.
+
+Before any of that runs with other people, read the last section of `docs/QA_FINDINGS.md`:
+every run so far is the founder reporting on his own hypothesis.
 
 ## Not built yet (by plan)
 Your setup screen, the task flow, counterbalanced timed trials, results, full reset.

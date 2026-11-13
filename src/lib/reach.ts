@@ -53,8 +53,13 @@ export function isReportEmpty(labels: readonly ReachLabel[]): boolean {
  * so that a label can be derived from it.
  */
 export function latencyByZone(samples: readonly TapSample[]): (number | null)[] {
+  return samplesByZone(samples).map((v) => median(v));
+}
+
+/** Every usable latency for each zone, not just its middle. */
+export function samplesByZone(samples: readonly TapSample[]): number[][] {
   return Array.from({ length: TARGET_COUNT }, (_, id) =>
-    median(samples.filter((s) => s.targetId === id && !s.promptRestarted).map((s) => s.latencyMs)),
+    samples.filter((s) => s.targetId === id && !s.promptRestarted).map((s) => s.latencyMs),
   );
 }
 
@@ -100,7 +105,11 @@ export type Mismatch = {
 export function findMismatches(
   labels: readonly ReachLabel[],
   latency: readonly (number | null)[],
-  { slowRatio = 1.6, quickRatio = 0.9 } = {},
+  {
+    slowRatio = 1.6,
+    quickRatio = 0.9,
+    perZone,
+  }: { slowRatio?: number; quickRatio?: number; perZone?: readonly number[][] } = {},
 ): Mismatch[] {
   const known = latency.filter((v): v is number => v !== null);
   const mid = median(known);
@@ -110,9 +119,17 @@ export function findMismatches(
     const v = latency[id];
     if (v === null) continue;
     const ratio = v / mid;
-    if (labels[id] === 'easy' && ratio >= slowRatio) {
+    // With only two taps per zone, a zone's middle is just their average, so one pause
+    // can carry a zone over the line on its own. When the individual taps are available,
+    // every one of them has to agree before the zone is called a disagreement.
+    // Caught on a real run: lower-middle-right averaged 1.62x off taps of 743 and 1639 ms.
+    const consistent = (test: (ms: number) => boolean) => {
+      const taps = perZone?.[id];
+      return !taps || taps.length === 0 || taps.every(test);
+    };
+    if (labels[id] === 'easy' && ratio >= slowRatio && consistent((ms) => ms / mid >= slowRatio)) {
       out.push({ zoneId: id, label: 'easy', latencyMs: v, ratio, kind: 'slow-but-easy' });
-    } else if (labels[id] === 'hard' && ratio <= quickRatio) {
+    } else if (labels[id] === 'hard' && ratio <= quickRatio && consistent((ms) => ms / mid <= quickRatio)) {
       out.push({ zoneId: id, label: 'hard', latencyMs: v, ratio, kind: 'quick-but-hard' });
     }
   }

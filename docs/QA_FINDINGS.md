@@ -187,3 +187,69 @@ That makes the comfort self-report a test of the instrument, not just another sc
 difficulty is real, top-left should come back labelled Hard; if the latency is mostly looking,
 it should come back Easy despite 2 seconds. That is a falsifiable prediction, written down
 before the question exists.
+
+## 2026-11-13 — THIRD RUN: the prediction resolves
+
+Same phone, same person, same hand, now with the self-report. 30 taps in 24.0 s, all touch,
+no stray touches, grip reported as **changed**.
+Session: `docs/sessions/2026-11-13-founder-iphone-right-v3-with-selfreport.json`. **n = 1.**
+
+### The prediction, and its answer
+
+Written into this file before the question existed: *top-left comes back Hard and the
+difficulty is real; Easy and the 2 seconds was mostly looking.*
+
+**Top-left came back Hard.** It timed 1252 ms. The reading the instrument was built to allow
+is the one it got, so for this person the top of the screen is genuinely harder to reach, not
+merely further from where the eyes rest.
+
+### What he said, against what the clock said
+
+|           | what he said | | | what the clock said (ms) | | |
+|---|---|---|---|---|---|---|
+|           | left | centre | right | left | centre | right |
+| top       | hard | hard | stretch | 1252 | 836 | 1093 |
+| upper-mid | hard | stretch | stretch | 707 | 736 | 918 |
+| middle    | easy | easy | easy | 530 | 624 | 607 |
+| lower-mid | easy | easy | easy | 540 | 648 | 1191 |
+| bottom    | easy | easy | easy | 961 | 754 | 640 |
+
+The boundary he drew is **flat and horizontal**: the top two rows — the upper 28% of the
+screen — are hard or stretch, and everything from the middle row down is easy. That is a
+cleaner statement than the timing alone supports.
+
+### Agreement is directional, not tight
+
+- easy zones median **640 ms**; stretch and hard together **877 ms**. A ratio of **1.37×**.
+- The ordering is not monotonic: *stretch* (918 ms) timed **slower** than *hard* (836 ms).
+  If latency tracked difficulty, it would not.
+
+So the two accounts point the same way without being the same measurement, which is the
+result the separation was built to be able to show.
+
+### Reproducibility is good
+
+Top row against middle row: **1.85×** in the previous run, **1.80×** in this one, from
+independent random orders. The instrument is stable across sessions.
+
+### A weakness this run exposed, now fixed
+
+Two taps per zone means a zone's "median" is just the average of two numbers, so one pause
+drags a whole cell. Median within-zone gap was **254 ms**; the worst was **896 ms**
+(lower-middle-right: 743 and 1639 ms). That single zone was the run's only reported
+disagreement, and it was an artefact.
+
+`findMismatches` now requires **every tap in a zone** to clear the threshold before the zone
+is called a disagreement. Under that rule this run reports none, which is correct. Per-zone
+numbers should still be treated as indicative; rows (6 taps) and columns (10 taps) are the
+level worth reading.
+
+### The limitation that matters most
+
+**The participant is the founder.** He knows the hypothesis, designed the screens and wants
+the product to work. A self-report from him about his own hypothesis is the weakest possible
+evidence for it, and the unusually tidy horizontal boundary is exactly what motivated
+reporting looks like. This run validates the *instrument*, not the idea.
+
+**For the five-person study: do not state the hypothesis, do not say which direction counts
+as a good result, and do not show anyone this map before they give their own labels.**

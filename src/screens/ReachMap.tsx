@@ -7,6 +7,7 @@ import {
   isReportEmpty,
   latencyByZone,
   rankZones,
+  samplesByZone,
   reportCounts,
   zoneName,
 } from '../lib/reach';
@@ -35,7 +36,7 @@ export function ReachMap({
   const { labels, grip } = comfort;
   const latency = latencyByZone(calibration.samples);
   const ranks = rankZones(latency);
-  const mismatches = findMismatches(labels, latency);
+  const mismatches = findMismatches(labels, latency, { perZone: samplesByZone(calibration.samples) });
   const counts = reportCounts(labels);
   const nothingSaid = isReportEmpty(labels);
 
