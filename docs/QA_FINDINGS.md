@@ -282,3 +282,24 @@ trial result can be checked against it.
 | "has not been tested yet" truncated at 320 px | FAIL → fixed. Was clipped to "has not been teste…"; now wraps to two lines, unclipped at both widths. |
 | Unit + component tests | 79/79 |
 | Contrast audit, all screens | PASS |
+
+## 2026-11-13 — Milestone 4 verification (sandbox)
+
+| Check | Result |
+|---|---|
+| Both trials complete end to end, counterbalanced | PASS — `scripts/trial-smoke.cjs` |
+| Every task control reachable, nothing covering it | FAIL → fixed. The task banner sat over the Original layout's header and swallowed taps on Search, More and Back; that condition could not be finished at all. Now asserted by hit-testing each control's own centre. |
+| Clock excludes the brief and the rating | PASS (unit tests) |
+| Stopped or interrupted trial recorded as incomplete | PASS |
+| No comparison shown unless both trials completed | PASS |
+| Unit + component tests | 118/118 |
+| Contrast audit, all screens | PASS |
+
+**Caught by the browser, not by jsdom.** The covered-controls bug was invisible to the
+component tests because jsdom has no layout or hit-testing. Anything about one element
+sitting over another needs a real engine; `scripts/trial-smoke.cjs` is where that belongs.
+
+### Still untested
+Durations from the emulated run (0.4–1.2 s) are automation speed and mean nothing. Real
+timings need a person. Also untested: Android, left-handed, the 'both hands' centre rail
+under a real task, VoiceOver / TalkBack, 200% zoom.

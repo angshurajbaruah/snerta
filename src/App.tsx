@@ -5,9 +5,12 @@ import { Calibrate, type CalibrationResult } from './screens/Calibrate';
 import { ComfortReport, type ComfortResult } from './screens/ComfortReport';
 import { ReachMap } from './screens/ReachMap';
 import { PlacementDemo } from './screens/PlacementDemo';
+import { Trial } from './screens/Trial';
+import { Results } from './screens/Results';
+import { pickFirstMode, trialPlan, type TrialResult } from './lib/trial';
 import type { Hand } from './types';
 
-type Route = 'welcome' | 'hand' | 'calibrate' | 'comfort' | 'map' | 'demo';
+type Route = 'welcome' | 'hand' | 'calibrate' | 'comfort' | 'map' | 'demo' | 'trial' | 'results';
 
 /** All session state lives in memory. Refreshing the page clears it — by design. */
 export function App() {
@@ -15,6 +18,10 @@ export function App() {
   const [hand, setHand] = useState<Hand | null>(null);
   const [calibration, setCalibration] = useState<CalibrationResult | null>(null);
   const [comfort, setComfort] = useState<ComfortResult | null>(null);
+  // Which layout goes first is drawn once per session and then fixed, so a reload
+  // cannot quietly reshuffle it part way through.
+  const [plan] = useState(() => trialPlan(pickFirstMode()));
+  const [trials, setTrials] = useState<TrialResult[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Move focus to the new screen's heading for screen-reader and keyboard users.
@@ -62,7 +69,44 @@ export function App() {
         />
       )}
       {route === 'demo' && hand && (
-        <PlacementDemo hand={hand} onHandChange={setHand} onExit={() => setRoute('welcome')} />
+        <PlacementDemo
+          hand={hand}
+          onHandChange={setHand}
+          onExit={() => {
+            setTrials([]);
+            setRoute('trial');
+          }}
+        />
+      )}
+      {route === 'trial' && hand && plan[trials.length] && (
+        <Trial
+          key={trials.length}
+          mode={plan[trials.length].mode}
+          position={plan[trials.length].position}
+          targetId={plan[trials.length].targetId}
+          hand={hand}
+          onDone={(r) => {
+            const next = [...trials, r];
+            setTrials(next);
+            if (next.length >= plan.length) setRoute('results');
+          }}
+        />
+      )}
+      {route === 'results' && (
+        <Results
+          hand={hand}
+          calibration={calibration}
+          comfort={comfort}
+          trials={trials}
+          onBack={() => setRoute('demo')}
+          onRestart={() => {
+            setTrials([]);
+            setComfort(null);
+            setCalibration(null);
+            setHand(null);
+            setRoute('welcome');
+          }}
+        />
       )}
     </div>
   );

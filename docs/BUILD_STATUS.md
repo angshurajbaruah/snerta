@@ -1,6 +1,6 @@
 # build status
 
-**Updated:** 2026-11-13 · **Milestone:** 0–1 (spike) + 2a–2c (rebrand, calibration rebuilt, new symbol) + 3 (comfort self-report and reach map)
+**Updated:** 2026-11-13 · **Milestone:** 0–1 (spike) + 2a–2c (rebrand, calibration, symbol) + 3 (self-report and reach map) + 4 (the experiment)
 **Git:** `angshurajbaruah/snerta`, branch `main`.
 
 ## Toolchain (actual)
@@ -10,13 +10,14 @@ Node 22.23.4 · npm 10.9.9 · React 19 · Vite 8.3 · Vitest 5.1 · TypeScript 5
 - Welcome → Hand selection (left / right / switches) → calibration (full-screen tray, 15
   positions × 2 randomized passes = 30 prompted taps, after 3 unrecorded practice taps) →
   comfort self-report (15 zones, Unknown by default, plus an optional grip question) →
-  reach map → Original / With snerta. placement demo.
+  reach map → free preview of both layouts → two counterbalanced timed trials with a
+  comfort rating after each → results, preference and export.
 - Skip path, clearly labelled as measuring nothing.
 - Opt-in local JSON download (`schemaVersion: kab-spike-0.1`).
 - No backend, storage, cookies, analytics, fonts-from-CDN or any network call.
 
 ## Verified (cloud sandbox, not a phone)
-- `npm test` → 5 files, 76 tests passed.
+- `npm test` → 7 files, 118 tests passed.
 - `npm run build` → typecheck + production build pass (JS 245 kB / 76 kB gzip, CSS 19 kB).
 - `scripts/smoke-touch.cjs`, headless Chromium with iPhone 13 emulation → 18 accepted touch
   taps, 1 stray in-tray touch logged as an observation, readout reports touch. **Emulated.**
@@ -42,12 +43,12 @@ the middle, top-left 1993 ms. See `docs/QA_FINDINGS.md`.
 - VoiceOver / TalkBack, 200% browser zoom.
 
 ## Next
-The instrument is validated as far as one person can validate it. Next is the experiment
-itself: the task flow, then two counterbalanced timed trials with a comfort rating after
-each, then honest results.
+Run the whole thing on a phone, end to end, and get real trial durations — the emulated ones
+are automation speed and mean nothing. Then the five-person study.
 
-Before any of that runs with other people, read the last section of `docs/QA_FINDINGS.md`:
-every run so far is the founder reporting on his own hypothesis.
+Before that runs with other people, read the last section of the 2026-11-13 third-run entry
+in `docs/QA_FINDINGS.md`: every run so far is the founder reporting on his own hypothesis,
+and the study must not reveal which direction counts as a good result.
 
 ## Not built yet (by plan)
-Your setup screen, the task flow, counterbalanced timed trials, results, full reset.
+The 'Your setup' screen from the design canvas. Everything else in the journey is built.

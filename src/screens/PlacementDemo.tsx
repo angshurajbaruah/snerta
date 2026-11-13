@@ -1,21 +1,17 @@
-import { useState, type ReactElement } from 'react';
-import { ArrowLeft, BrandBar, MenuIcon, SearchIcon } from '../components/ui';
-import { CONTROL_LABELS, nearestToThumb, placementFor, type ControlId } from '../lib/layout';
+import { useState } from 'react';
+import { BrandBar, PillButton } from '../components/ui';
+import { InboxApp } from '../components/InboxApp';
+import { placementFor, type ControlId } from '../lib/layout';
+import type { AppView } from '../lib/trial';
 import type { Hand, Mode } from '../types';
 
-const ICONS: Record<ControlId, (p: { size?: number }) => ReactElement> = {
-  back: ArrowLeft,
-  search: SearchIcon,
-  menu: MenuIcon,
-};
-
 /**
- * Milestone-2 placement demo: the SAME three working controls render either in the
- * header (Original) or in a bottom rail on the chosen side (snerta.). Switching is
- * explicit, reversible, and never happens mid-action. State survives every switch.
+ * A free look at both layouts before anything is timed.
  *
- * This is a candidate layout for testing. Nothing here has been shown to be faster,
- * easier or better — that is what the timed trials in the next milestone are for.
+ * It renders the same inbox component the trials use, so the first timed task is not
+ * also the first sight of the screen. It sits in a device frame rather than filling
+ * the display, which the task brief says plainly — the trials themselves are full
+ * screen, because that is where the rail has to be for the reach to be real.
  */
 export function PlacementDemo({
   hand,
@@ -27,74 +23,56 @@ export function PlacementDemo({
   onExit: () => void;
 }) {
   const [mode, setMode] = useState<Mode>('standard');
-  const [log, setLog] = useState<string>('Nothing pressed yet.');
-  const [presses, setPresses] = useState(0);
+  const [view, setView] = useState<AppView>('inbox');
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [archived, setArchived] = useState<string[]>([]);
   const placement = placementFor(mode, hand);
-  const modeName = mode === 'kab' ? 'snerta.' : 'Original';
 
-  const press = (id: ControlId) => {
-    setPresses((n) => n + 1);
-    setLog(`${CONTROL_LABELS[id]} pressed — ${modeName} layout.`);
+  const handlers = {
+    onControl: (id: ControlId) => {
+      if (id === 'search') {
+        if (view === 'inbox') setView('search');
+        setMenuOpen(false);
+      } else if (id === 'menu') {
+        if (view === 'message') setMenuOpen(!menuOpen);
+      } else if (menuOpen) {
+        setMenuOpen(false);
+      } else {
+        setView('inbox');
+        setOpenId(null);
+      }
+    },
+    onOpen: (id: string) => {
+      setOpenId(id);
+      setView('message');
+      setMenuOpen(false);
+    },
+    onArchive: () => {
+      if (openId) setArchived((a) => (a.includes(openId) ? a : [...a, openId]));
+      setMenuOpen(false);
+      setView('inbox');
+      setOpenId(null);
+    },
+    onCloseMenu: () => setMenuOpen(false),
   };
-
-  const control = (id: ControlId, primary = false) => {
-    const Icon = ICONS[id];
-    return (
-      <button
-        key={id}
-        type="button"
-        className={`app-ctrl ${primary ? 'app-ctrl--primary' : ''}`}
-        onClick={() => press(id)}
-        aria-label={CONTROL_LABELS[id]}
-      >
-        <Icon size={20} />
-      </button>
-    );
-  };
-
-  const inRail = placement.rail.length > 0;
-  const thumbLead = nearestToThumb(placement);
 
   return (
-    <main className="demo" aria-label="Layout demo">
+    <main className="demo" aria-label="Layout preview">
       <BrandBar>
         <span className="chip">Before / after</span>
       </BrandBar>
 
       <div className="device">
-        <div className={`device__screen ${inRail ? 'has-rail' : ''}`}>
-          <div className="fake-header">
-            <div className="fake-header__left">
-              {placement.header.includes('back') && control('back')}
-              <span className="fake-header__title">Inbox</span>
-            </div>
-            <div className="fake-header__right">
-              {placement.header.filter((id) => id !== 'back').map((id) => control(id))}
-            </div>
-          </div>
-
-          <div className="fake-list" aria-hidden="true">
-            {[62, 48, 70, 55, 66, 51, 73, 59, 64].map((w, i) => (
-              <div className="fake-row" key={i}>
-                <span className="fake-row__av" />
-                <span className="fake-row__lines">
-                  <span style={{ width: `${w}%` }} />
-                  <span style={{ width: `${Math.min(w + 18, 96)}%` }} />
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* The list scrolls under the chrome at both ends, so it is faded into the
-              page rather than chopped off. Present the whole time, not only at rest. */}
-          <span className="fake-edge fake-edge--top" aria-hidden="true" />
-          {inRail && <span className="fake-edge fake-edge--bottom" aria-hidden="true" />}
-
-          {inRail && (
-            <nav className={`app-rail app-rail--${placement.side}`} aria-label="snerta controls">
-              {placement.rail.map((id) => control(id, id === thumbLead))}
-            </nav>
-          )}
+        <div className="device__screen">
+          <InboxApp
+            placement={placement}
+            view={view}
+            openId={openId}
+            menuOpen={menuOpen}
+            archivedIds={archived}
+            handlers={handlers}
+          />
         </div>
       </div>
 
@@ -102,9 +80,8 @@ export function PlacementDemo({
         <div className="tile__name">
           {mode === 'standard' ? 'Controls in the header' : `Controls moved ${sideWord(placement.side)}`}
         </div>
-        <p className="note note--wrap">Which is easier for you has not been tested yet.</p>
-        <p className="note" aria-live="polite">
-          {log} · {presses} press{presses === 1 ? '' : 'es'} · hand set to {hand}
+        <p className="note note--wrap">
+          Have a proper go at both. Which is easier for you has not been tested yet.
         </p>
       </section>
 
@@ -117,30 +94,24 @@ export function PlacementDemo({
               role="radio"
               aria-checked={mode === m}
               className={`segmented__opt ${mode === m ? 'is-on' : ''}`}
-              onClick={() => setMode(m)}
+              onClick={() => {
+                setMode(m);
+                setMenuOpen(false);
+              }}
             >
               {m === 'standard' ? 'Original' : 'With snerta.'}
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-          <button
-            type="button"
-            className="text-btn"
-            style={{ color: 'var(--silver)', textDecorationColor: 'var(--graphite)' }}
-            onClick={() => onHandChange(nextHand(hand))}
-          >
-            Switch hand ({hand})
-          </button>
-          <button
-            type="button"
-            className="text-btn"
-            style={{ color: 'var(--silver)', textDecorationColor: 'var(--graphite)' }}
-            onClick={onExit}
-          >
-            Start over
-          </button>
-        </div>
+        <PillButton onClick={onExit}>Start the comparison</PillButton>
+        <button
+          type="button"
+          className="text-btn"
+          style={{ color: 'var(--silver)', textDecorationColor: 'var(--graphite)' }}
+          onClick={() => onHandChange(nextHand(hand))}
+        >
+          Switch hand ({hand})
+        </button>
       </div>
     </main>
   );

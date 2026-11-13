@@ -1,8 +1,9 @@
 import type { Hand, PanelObservation, ReachLabel, TapSample } from '../types';
 import { evidenceKind, type EvidenceKind } from './calibration';
 import { latencyByZone, type GripAnswer } from './reach';
+import { compare, type Preference, type TrialResult } from './trial';
 
-export const SCHEMA_VERSION = 'snerta-0.2';
+export const SCHEMA_VERSION = 'snerta-0.3';
 
 export type SessionExport = {
   schemaVersion: string;
@@ -20,6 +21,13 @@ export type SessionExport = {
   gripChanged: GripAnswer;
   /** Median prompt-to-tap time per zone, kept separate from selfReport on purpose. */
   latencyByZoneMs: (number | null)[];
+  /** Every trial attempted, including ones that were stopped. */
+  trials: TrialResult[];
+  /** Which layout ran first. Practice favours whichever came second. */
+  firstMode: 'standard' | 'kab' | null;
+  /** Filled only when both trials finished; null otherwise, never a half-comparison. */
+  comparison: { durationDeltaMs: number; comfortDelta: number | null } | null;
+  preference: Preference;
   limitations: string[];
 };
 
@@ -29,6 +37,9 @@ export const LIMITATIONS = [
   'Speed is not comfort. Nothing here measures hand size, anatomy or pain.',
   'selfReport is what the person said; latencyByZoneMs is what the clock recorded. Neither was derived from the other, and labels left as unknown were left unknown.',
   'Non-target observations are touches inside the tray away from the active target; they are not confirmed errors.',
+  'Trial durations cover the task only: from Start to the action that finished it, never the rating.',
+  'offTaskTaps counts taps that did not advance the task. They are observations, not confirmed mistakes.',
+  'comparison is null unless both trials were completed. Two trials cannot separate the layout from practice.',
   'One short session on one device cannot establish a general result.',
 ];
 
@@ -40,11 +51,15 @@ export function buildSessionExport(args: {
   skipped: boolean;
   labels?: readonly ReachLabel[] | null;
   grip?: GripAnswer;
+  trials?: readonly TrialResult[];
+  preference?: Preference;
   now?: Date;
 }): SessionExport {
+  const trials = [...(args.trials ?? [])];
+  const c = compare(trials);
   return {
     schemaVersion: SCHEMA_VERSION,
-    build: 'milestone-3-reach-map',
+    build: 'milestone-4-trials',
     exportedAtIso: (args.now ?? new Date()).toISOString(),
     hand: args.hand,
     evidence: args.skipped ? 'preview' : evidenceKind(args.samples),
@@ -56,6 +71,10 @@ export function buildSessionExport(args: {
     selfReport: args.labels ? args.labels.map((label, zoneId) => ({ zoneId, label })) : null,
     gripChanged: args.grip ?? null,
     latencyByZoneMs: latencyByZone(args.samples),
+    trials,
+    firstMode: trials.find((t) => t.position === 1)?.mode ?? null,
+    comparison: c ? { durationDeltaMs: c.durationDeltaMs!, comfortDelta: c.comfortDelta } : null,
+    preference: args.preference ?? null,
     limitations: LIMITATIONS,
   };
 }

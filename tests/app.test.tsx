@@ -89,8 +89,11 @@ describe('Skip path and placement demo', () => {
     expect(names(rail()!)).toEqual(['Back', 'More', 'Search']);
     expect(within(header()).queryByRole('button')).toBeNull();
 
+    // The rail's controls really drive the app: open a message, then Back returns.
+    fireEvent.click(screen.getByRole('button', { name: /Priya Nair/ }));
+    expect(screen.getByRole('heading', { name: 'Priya Nair' })).toBeTruthy();
     fireEvent.click(within(rail()!).getByRole('button', { name: 'Back' }));
-    expect(screen.getByText(/Back pressed — snerta\. layout\./)).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Priya Nair' })).toBeNull();
 
     // Hand cycles right → left → both, and the rail follows.
     fireEvent.click(screen.getByRole('button', { name: /Switch hand/ }));
@@ -102,12 +105,11 @@ describe('Skip path and placement demo', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Original' }));
     expect(rail()).toBeNull();
     expect(names(header())).toEqual(['Back', 'More', 'Search']);
-    expect(screen.getByText(/1 press ·/)).toBeTruthy();
   });
 
   it('reserves room below the list so the last row clears the rail', () => {
     toDemo('Right');
-    const screenEl = () => document.querySelector('.device__screen') as HTMLElement;
+    const screenEl = () => document.querySelector('.inbox') as HTMLElement;
     expect(screenEl().classList.contains('has-rail')).toBe(false);
     expect(document.querySelector('.fake-edge--bottom')).toBeNull();
 
