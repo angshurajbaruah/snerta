@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+*.local
+.DS_Store
+# never commit participant exports
+kab-session-*.json
+tsconfig.tsbuildinfo
