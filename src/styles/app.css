@@ -556,42 +556,68 @@ button {
   background: var(--white);
 }
 
-/* ---------- Calibration tray ---------- */
-.tray {
-  flex: 1 1 auto;
-  min-height: 300px;
-  position: relative;
+/* ---------- Calibration: full-screen measuring surface ----------
+   The tray covers the whole viewport so the top of the screen, where one-handed
+   reach actually fails, is sampled too. Dots are positioned once against the tray
+   and never move, whatever else appears over them. */
+.cal {
+  position: fixed;
+  inset: 0;
   overflow: hidden;
-  border-radius: var(--r-bento);
-  background: linear-gradient(180deg, #ececef 0%, #f6f6f8 100%);
-  box-shadow: var(--press);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
+  background: linear-gradient(180deg, #ececef 0%, #f6f6f8 55%, #ececed 100%);
+}
+.cal__tray {
+  position: absolute;
+  /* Inset by the safe areas so no target lands under the status bar or Dynamic
+     Island, and by a strip at the bottom that belongs to the run controls, so a
+     bottom-row target can never sit beneath the Stop button and eat its taps.
+     The bottom is the easy zone anyway; the top is the one worth sampling. */
+  top: env(safe-area-inset-top, 0px);
+  left: env(safe-area-inset-left, 0px);
+  right: env(safe-area-inset-right, 0px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-.tray__glow {
+.cal__tray.is-dimmed .bead {
+  opacity: 0.35;
+}
+.bead {
   position: absolute;
-  right: -150px;
-  bottom: -150px;
-  width: 400px;
-  height: 400px;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(10, 10, 11, 0.1) 0%, rgba(10, 10, 11, 0.04) 50%, rgba(10, 10, 11, 0) 70%);
+  background: linear-gradient(180deg, #d6d7db 0%, #f6f6f8 100%);
+  box-shadow: inset 0 2px 4px rgba(10, 10, 11, 0.2), 0 1px 0 #ffffff;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
   pointer-events: none;
 }
-.tray__head {
-  position: relative;
+/* The active dot grows about its own centre, so the tap point never moves. */
+.bead.is-active {
+  transform: scale(1.55);
+  background: radial-gradient(circle at 35% 28%, #8a8b91 0%, #2a2b2f 36%, #0a0a0b 78%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 0 0 5px rgba(10, 10, 11, 0.07),
+    0 0 0 10px rgba(10, 10, 11, 0.04), 0 3px 5px rgba(10, 10, 11, 0.4);
+}
+
+/* During the run the top chrome goes away: it would overlap the top row of
+   targets, which is the row most worth measuring. */
+.cal__bar {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  flex: none;
+  gap: 10px;
+  z-index: 2;
 }
-.count-chip {
+.cal__count {
   min-height: 32px;
   padding: 0 14px;
   border-radius: 999px;
@@ -604,36 +630,55 @@ button {
   font-variant-numeric: tabular-nums;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 6px 12px -6px rgba(10, 10, 11, 0.5);
 }
-.tray__field {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
+.cal__stop {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 1px rgba(10, 10, 11, 0.06), 0 6px 14px -8px rgba(10, 10, 11, 0.4);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--graphite);
+  cursor: pointer;
+  touch-action: manipulation;
 }
-.bead {
+
+/* Instructions float over the tray instead of pushing it, so the dots sit in
+   exactly the same place before, during and after the run. */
+.cal__card {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  margin: -10px 0 0 -10px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #d6d7db 0%, #f6f6f8 100%);
-  box-shadow: inset 0 2px 4px rgba(10, 10, 11, 0.2), 0 1px 0 #ffffff;
-  transition: width 0.18s ease, height 0.18s ease, margin 0.18s ease, box-shadow 0.18s ease;
-  pointer-events: none;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 3;
+  border-radius: var(--r-bento);
+  background: rgba(252, 252, 253, 0.97);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 #ffffff, 0 0 0 1px rgba(10, 10, 11, 0.05),
+    0 24px 48px -20px rgba(10, 10, 11, 0.5);
+  padding: 22px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  text-align: left;
 }
-.bead.is-active {
-  width: 30px;
-  height: 30px;
-  margin: -15px 0 0 -15px;
-  background: radial-gradient(circle at 35% 28%, #8a8b91 0%, #2a2b2f 36%, #0a0a0b 78%);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 0 0 6px rgba(10, 10, 11, 0.05),
-    0 3px 4px rgba(10, 10, 11, 0.35), 0 12px 18px -4px rgba(10, 10, 11, 0.45);
+.cal__card .lede {
+  max-width: none;
 }
-.bead.is-done {
-  background: radial-gradient(circle at 35% 30%, #e6e7ea, #a2a3a8 70%, #6b6c72);
-  box-shadow: 0 2px 4px -1px rgba(10, 10, 11, 0.3);
+.cal__card-actions {
+  display: flex;
+  gap: var(--gap);
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: var(--r-bento);
+  background: var(--grad-dock);
+  box-shadow: var(--lift-dock);
 }
-.tray.is-dimmed .bead {
-  opacity: 0.4;
+.cal__card .text-btn {
+  align-self: center;
 }
 
 .alert {

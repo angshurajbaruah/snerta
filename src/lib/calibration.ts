@@ -2,20 +2,30 @@ import type { PanelObservation, PanelRect, TapSample } from '../types';
 
 /** Grid, row-major from the top-left: COLS wide by ROWS tall. */
 export const COLS = 3;
-export const ROWS = 3;
+export const ROWS = 5;
 export const TARGET_COUNT = COLS * ROWS;
 /** How many times each position is prompted. Two passes give a repeat measure per position. */
 export const PASSES = 2;
-export const SEQUENCE_LENGTH = TARGET_COUNT * PASSES;
+export const MEASURED_COUNT = TARGET_COUNT * PASSES;
+/** Unrecorded taps at the start, so nobody is still working out the task on real data. */
+export const PRACTICE_COUNT = 3;
+export const SEQUENCE_LENGTH = PRACTICE_COUNT + MEASURED_COUNT;
 /** Hit area is a 52×52 CSS px square around each target centre. */
 export const HIT_HALF_SIZE_PX = 26;
 
-/** Evenly spaced centres as fractions of the panel, inset by half a cell. */
-function fractions(n: number): number[] {
-  return Array.from({ length: n }, (_, i) => (2 * i + 1) / (2 * n));
-}
-export const COL_FRACTIONS = fractions(COLS);
-export const ROW_FRACTIONS = fractions(ROWS);
+/**
+ * Target centres as fractions of the tray, which now spans the whole screen.
+ *
+ * The first build put a 3×3 grid inside a card in the middle of the page, so every
+ * target sat between 34% and 69% down the screen — the comfortable band. The top of
+ * the screen, which is the part one-handed reach actually fails at, was never sampled,
+ * and the resulting latencies were predictably flat. Found on a real phone, 2026-11-13.
+ *
+ * The insets are the smallest that keep every 52px hit square fully on the tray at the
+ * narrowest supported size; `hit squares stay on the tray` in the tests pins this.
+ */
+export const COL_FRACTIONS = [0.12, 0.5, 0.88];
+export const ROW_FRACTIONS = [0.06, 0.28, 0.5, 0.72, 0.94];
 
 export type Rng = () => number;
 
@@ -36,6 +46,16 @@ function shuffle<T>(items: readonly T[], rng: Rng): T[] {
 export function makeSequence(rng: Rng = Math.random): number[] {
   const ids = Array.from({ length: TARGET_COUNT }, (_, i) => i);
   const sequence: number[] = [];
+  // Practice taps come from the middle rows, so the task is learned on easy targets
+  // rather than on a stretch, and they are never recorded.
+  const easy = ids.filter((id) => {
+    const row = Math.floor(id / COLS);
+    return row >= 1 && row <= ROWS - 2;
+  });
+  for (let i = 0; i < PRACTICE_COUNT; i++) {
+    const pool = shuffle(easy, rng).filter((id) => id !== sequence[sequence.length - 1]);
+    sequence.push(pool[0]);
+  }
   for (let p = 0; p < PASSES; p++) {
     const pass = shuffle(ids, rng);
     const prev = sequence[sequence.length - 1];
@@ -159,7 +179,9 @@ export type CalibrationState = {
 };
 
 export function initialCalibration(sequence: number[], geometry: GeometrySnapshot | null): CalibrationState {
-  if (sequence.length !== SEQUENCE_LENGTH) throw new Error('sequence must have 18 entries');
+  if (sequence.length !== SEQUENCE_LENGTH) {
+    throw new Error(`sequence must have ${SEQUENCE_LENGTH} entries, got ${sequence.length}`);
+  }
   return {
     sequence,
     step: 0,
@@ -251,9 +273,15 @@ export function calibrationReducer(state: CalibrationState, ev: CalibrationEvent
         };
       }
 
+      const step = state.step + 1;
+      if (state.step < PRACTICE_COUNT) {
+        // Practice tap: advances the run, recorded nowhere.
+        return { ...state, step, promptAt: null, promptRestarted: false };
+      }
+
       const f = targetFraction(target);
       const sample: TapSample = {
-        index: state.step,
+        index: state.step - PRACTICE_COUNT,
         targetId: target,
         pointerType: ev.input.pointerType || 'unknown',
         targetX: round4(f.x),
@@ -268,7 +296,6 @@ export function calibrationReducer(state: CalibrationState, ev: CalibrationEvent
         panelH: Math.round(ev.rect.height),
         occurredAtIso: ev.iso,
       };
-      const step = state.step + 1;
       return {
         ...state,
         samples: [...state.samples, sample],
@@ -292,11 +319,11 @@ function round4(n: number): number {
 export type EvidenceKind = 'touch' | 'preview' | 'incomplete';
 
 /**
- * 'touch' only when all 18 accepted samples were browser-reported as touch.
+ * 'touch' only when every measured sample was browser-reported as touch.
  * Even then it is browser-reported touch — not proof a thumb was used.
  */
 export function evidenceKind(samples: TapSample[]): EvidenceKind {
-  if (samples.length < SEQUENCE_LENGTH) return 'incomplete';
+  if (samples.length < MEASURED_COUNT) return 'incomplete';
   return samples.every((s) => s.pointerType === 'touch') ? 'touch' : 'preview';
 }
 

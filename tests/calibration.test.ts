@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  COLS,
+  COL_FRACTIONS,
+  HIT_HALF_SIZE_PX,
+  MEASURED_COUNT,
+  PRACTICE_COUNT,
+  ROWS,
+  ROW_FRACTIONS,
   SEQUENCE_LENGTH,
   TARGET_COUNT,
   calibrationReducer,
@@ -15,6 +22,7 @@ import {
   type CalibrationState,
   type GeometrySnapshot,
 } from '../src/lib/calibration';
+import { targetFraction } from '../src/lib/calibration';
 import type { PanelRect, TapSample } from '../src/types';
 
 const RECT: PanelRect = { left: 20, top: 100, width: 300, height: 450 };
@@ -57,14 +65,35 @@ function fresh(seed = 1) {
   return initialCalibration(makeSequence(seeded(seed)), GEO);
 }
 
+/** Run through the unrecorded practice taps so a test can start on measured data. */
+function skipPractice(state: CalibrationState): CalibrationState {
+  let s = state;
+  for (let i = 0; i < PRACTICE_COUNT; i++) {
+    s = prompted(s, i * 1000);
+    s = calibrationReducer(s, tapOn(s, { at: i * 1000 + 300 }));
+  }
+  return s;
+}
+
 describe('makeSequence', () => {
-  it('contains each position exactly twice, as two full passes', () => {
+  it('contains each position exactly twice after the practice taps', () => {
     const all = Array.from({ length: TARGET_COUNT }, (_, i) => i);
     for (let seed = 1; seed < 300; seed++) {
       const seq = makeSequence(seeded(seed));
       expect(seq).toHaveLength(SEQUENCE_LENGTH);
-      expect(seq.slice(0, TARGET_COUNT).sort((a, b) => a - b)).toEqual(all);
-      expect(seq.slice(TARGET_COUNT).sort((a, b) => a - b)).toEqual(all);
+      const measured = seq.slice(PRACTICE_COUNT);
+      expect(measured.slice(0, TARGET_COUNT).sort((a, b) => a - b)).toEqual(all);
+      expect(measured.slice(TARGET_COUNT).sort((a, b) => a - b)).toEqual(all);
+    }
+  });
+
+  it('draws practice taps from the middle rows only, never a top or bottom stretch', () => {
+    for (let seed = 1; seed < 400; seed++) {
+      for (const id of makeSequence(seeded(seed)).slice(0, PRACTICE_COUNT)) {
+        const row = Math.floor(id / COLS);
+        expect(row).toBeGreaterThanOrEqual(1);
+        expect(row).toBeLessThanOrEqual(ROWS - 2);
+      }
     }
   });
 
@@ -72,6 +101,44 @@ describe('makeSequence', () => {
     for (let seed = 1; seed < 2000; seed++) {
       const seq = makeSequence(seeded(seed));
       for (let i = 1; i < seq.length; i++) expect(seq[i]).not.toBe(seq[i - 1]);
+    }
+  });
+});
+
+describe('grid coverage', () => {
+  it('reaches the top and bottom of the tray, not just the comfortable middle', () => {
+    // The first build sampled only 34%-69% of the screen and found every position
+    // equally easy, because the hard zone was never tested. Real phone, 2026-11-13.
+    expect(Math.min(...ROW_FRACTIONS)).toBeLessThanOrEqual(0.08);
+    expect(Math.max(...ROW_FRACTIONS)).toBeGreaterThanOrEqual(0.92);
+    expect(ROWS).toBeGreaterThanOrEqual(5);
+  });
+
+  it('keeps every 52px hit square fully on the tray at the smallest supported size', () => {
+    const W = 320;
+    const H = 480;
+    for (const fx of COL_FRACTIONS) {
+      expect(fx * W).toBeGreaterThanOrEqual(HIT_HALF_SIZE_PX);
+      expect((1 - fx) * W).toBeGreaterThanOrEqual(HIT_HALF_SIZE_PX);
+    }
+    for (const fy of ROW_FRACTIONS) {
+      expect(fy * H).toBeGreaterThanOrEqual(HIT_HALF_SIZE_PX);
+      expect((1 - fy) * H).toBeGreaterThanOrEqual(HIT_HALF_SIZE_PX);
+    }
+  });
+
+  it('never places two targets closer than one hit square apart', () => {
+    const W = 320;
+    const H = 480;
+    for (let a = 0; a < TARGET_COUNT; a++) {
+      for (let b = a + 1; b < TARGET_COUNT; b++) {
+        const fa = targetFraction(a);
+        const fb = targetFraction(b);
+        const apart =
+          Math.abs(fa.x - fb.x) * W >= HIT_HALF_SIZE_PX * 2 ||
+          Math.abs(fa.y - fb.y) * H >= HIT_HALF_SIZE_PX * 2;
+        expect(apart).toBe(true);
+      }
     }
   });
 });
@@ -116,19 +183,40 @@ describe('calibrationReducer', () => {
     expect(calibrationReducer(s, tapOn(s))).toBe(s);
   });
 
+  it('practice taps advance the run but are recorded nowhere', () => {
+    let s = fresh();
+    for (let i = 0; i < PRACTICE_COUNT; i++) {
+      s = prompted(s, i * 1000);
+      s = calibrationReducer(s, tapOn(s, { at: i * 1000 + 500 }));
+    }
+    expect(s.step).toBe(PRACTICE_COUNT);
+    expect(s.samples).toHaveLength(0);
+    expect(s.status).toBe('running');
+  });
+
+  it('the first recorded sample is index 0, not the practice offset', () => {
+    let s = fresh();
+    for (let i = 0; i <= PRACTICE_COUNT; i++) {
+      s = prompted(s, i * 1000);
+      s = calibrationReducer(s, tapOn(s, { at: i * 1000 + 500 }));
+    }
+    expect(s.samples).toHaveLength(1);
+    expect(s.samples[0].index).toBe(0);
+  });
+
   it('one pointerdown on the active target produces exactly one sample', () => {
-    let s = prompted(fresh());
+    let s = skipPractice(fresh());
+    s = prompted(s);
     s = calibrationReducer(s, tapOn(s));
     expect(s.samples).toHaveLength(1);
-    expect(s.step).toBe(1);
     // A second pointerdown before the next prompt paints (e.g. a lingering contact) does nothing.
     const again = calibrationReducer(s, tapOn(s));
     expect(again.samples).toHaveLength(1);
   });
 
   it('records normalized target and pointer in the same panel frame, and latency from prompt', () => {
-    let s = prompted(fresh(), 400);
-    const id = s.sequence[0];
+    let s = prompted(skipPractice(fresh()), 400);
+    const id = s.sequence[s.step]; // first measured target, not the first practice one
     s = calibrationReducer(s, tapOn(s, { dx: 6, dy: -9, at: 1234.6 }));
     const t = s.samples[0];
     expect(t.targetId).toBe(id);
@@ -140,30 +228,29 @@ describe('calibrationReducer', () => {
   });
 
   it('wrong-position taps, secondary buttons and second fingers do not advance', () => {
-    let s = prompted(fresh());
+    let s = prompted(skipPractice(fresh()));
     s = calibrationReducer(s, tapOn(s, { dx: 80 }));
     s = calibrationReducer(s, tapOn(s, { button: 2, pointerType: 'mouse' }));
     s = calibrationReducer(s, tapOn(s, { isPrimary: false }));
     expect(s.samples).toHaveLength(0);
-    expect(s.step).toBe(0);
     expect(s.observations).toHaveLength(3);
   });
 
-  it('completes after exactly 18 accepted taps and then ignores further input', () => {
+  it('completes after every practice and measured tap, then ignores further input', () => {
     let s = fresh(7);
     for (let i = 0; i < SEQUENCE_LENGTH; i++) {
       s = prompted(s, i * 1000);
       s = calibrationReducer(s, tapOn(s, { at: i * 1000 + 600 }));
     }
     expect(s.status).toBe('complete');
-    expect(s.samples).toHaveLength(18);
-    expect(s.samples.map((x) => x.targetId)).toEqual(s.sequence);
+    expect(s.samples).toHaveLength(MEASURED_COUNT);
+    expect(s.samples.map((x) => x.targetId)).toEqual(s.sequence.slice(PRACTICE_COUNT));
     const after = calibrationReducer(s, { type: 'prompted', at: 99999 });
     expect(after).toBe(s);
   });
 
   it('pauses while hidden and restarts the prompt clock on return (time away is not counted)', () => {
-    let s = prompted(fresh(), 100);
+    let s = prompted(skipPractice(fresh()), 100);
     s = calibrationReducer(s, { type: 'hidden' });
     expect(calibrationReducer(s, tapOn(s)).samples).toHaveLength(0); // taps ignored while hidden
     s = calibrationReducer(s, { type: 'visible' });
@@ -176,7 +263,7 @@ describe('calibrationReducer', () => {
   });
 
   it('interrupts on rotation, width change or zoom, but tolerates height-only toolbar changes', () => {
-    const s = prompted(fresh());
+    const s = prompted(skipPractice(fresh()));
     expect(calibrationReducer(s, { type: 'geometry', now: { ...GEO } }).status).toBe('running');
     expect(calibrationReducer(s, { type: 'geometry', now: { ...GEO, orientation: 'landscape' } }).status).toBe('interrupted');
     expect(calibrationReducer(s, { type: 'geometry', now: { ...GEO, viewportW: 844 } }).status).toBe('interrupted');
@@ -198,10 +285,10 @@ describe('evidenceKind', () => {
     latencyMs: 1, promptRestarted: false, viewportW: 1, viewportH: 1, panelW: 1, panelH: 1, occurredAtIso: '',
   });
 
-  it('labels touch only when all 18 samples are browser-reported touch', () => {
-    expect(evidenceKind(Array(18).fill(sample('touch')))).toBe('touch');
-    expect(evidenceKind([...Array(17).fill(sample('touch')), sample('mouse')])).toBe('preview');
-    expect(evidenceKind(Array(18).fill(sample('pen')))).toBe('preview');
+  it('labels touch only when every measured sample is browser-reported touch', () => {
+    expect(evidenceKind(Array(MEASURED_COUNT).fill(sample('touch')))).toBe('touch');
+    expect(evidenceKind([...Array(MEASURED_COUNT - 1).fill(sample('touch')), sample('mouse')])).toBe('preview');
+    expect(evidenceKind(Array(MEASURED_COUNT).fill(sample('pen')))).toBe('preview');
     expect(evidenceKind(Array(5).fill(sample('touch')))).toBe('incomplete');
   });
 });

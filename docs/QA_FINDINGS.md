@@ -109,3 +109,26 @@ tap coordinates are ever used to *position* anything.
 
 ### Still untested
 VoiceOver / TalkBack · 200% zoom · left-handed · Android Chrome · any second participant.
+
+## 2026-11-13 — Milestone 2b verification (sandbox)
+
+Fixes for the two findings above. Emulated at the founder's own viewport, 393×695.
+
+| Check | Result |
+|---|---|
+| Dots that move when Start is pressed | **0 of 15** (was: all of them) |
+| Topmost target, no safe-area inset | 38 px = 5.5% down the screen (was 34%) |
+| Topmost target, with a 59 px notch inset | ≈ 91 px = 13% down — the zone the founder named as unreachable |
+| Full run, 3 practice + 30 measured | Completes, no page errors |
+| Stray tap mid-run | Logged as an observation, not an error |
+| Hit squares fully on the tray at 320×480 | PASS (unit test) |
+| No two targets within one hit square | PASS (unit test) |
+| Unit + component tests | 38/38 |
+| Contrast audit, all screens | PASS |
+
+### Still open
+- The 30-tap run has not been timed on a real phone. The 18-tap version took 17.8 s, so
+  expect roughly 30 s. If that is too long in practice, dropping to one pass halves it.
+- Whether the top row is genuinely hard **to reach** or merely slower **to notice** is still
+  unresolved, and no number from this instrument can settle it. The comfort self-report can.
+- Android, left-handed, VoiceOver / TalkBack, 200% zoom: all still untested.
