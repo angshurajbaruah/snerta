@@ -1,4 +1,5 @@
 import { BrandBar, NoAccountIcon, PillButton, Screen, UndoIcon } from '../components/ui';
+import { Fingerprint } from '../components/Fingerprint';
 
 export function Welcome({ onStart }: { onStart: () => void }) {
   return (
@@ -8,11 +9,8 @@ export function Welcome({ onStart }: { onStart: () => void }) {
       </BrandBar>
 
       <section className="bento--hero">
-        <div className="orbit" aria-hidden="true">
-          <span className="orbit__ring" />
-          <span className="orbit__sphere" />
-          <span className="orbit__glint" />
-          <span className="orbit__moon" />
+        <div className="hero__mark" aria-hidden="true">
+          <Fingerprint />
         </div>
         <div className="bento__copy">
           <h1 className="title title--hero">Every tap, within reach.</h1>

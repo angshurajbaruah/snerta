@@ -12,8 +12,14 @@ one-handed usability. The answer may be no. That is a valid result.
 
 ## Name and identity (Brand Identity 2.0, 2026-11-13)
 
-- Product name: **snerta**, always lowercase. The wordmark **`snerta.`** — with the full stop,
-  no symbol — is the logo. Extra optical space between the r and the t.
+- Product name: **snerta**, always lowercase. The primary logo is the wordmark **`snerta.`**,
+  with the full stop. Extra optical space between the r and the t.
+- Symbol: an **embossed fingerprint** of concentric whorl ridges, each broken once, lit from
+  the top-left with a highlight above and a shadow below so it reads as pressed into the
+  surface. It pairs with the wordmark and is the app icon and favicon. The ridge geometry is
+  artwork, copied verbatim from the design canvas into `src/components/fingerprintPaths.ts`:
+  **do not redraw it by hand**. `src/components/Fingerprint.tsx` renders it. It replaced an
+  earlier sphere-and-ring hero object on 2026-11-13.
 - Tagline: **Every tap, within reach.**
 - Typeface: **Montserrat**, self-hosted via `@fontsource-variable/montserrat` (SIL OFL).
   Do not swap to the Google Fonts CDN: it would leak visitor IPs to a third party and break

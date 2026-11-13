@@ -1,6 +1,6 @@
 # build status
 
-**Updated:** 2026-11-13 · **Milestone:** 0 (baseline) + 1 (feasibility spike) + 2a (rebrand to snerta)
+**Updated:** 2026-11-13 · **Milestone:** 0–1 (spike) + 2a (rebrand) + 2b (calibration rebuilt) + 2c (new symbol)
 **Git:** `angshurajbaruah/snerta`, branch `main`.
 
 ## Toolchain (actual)
