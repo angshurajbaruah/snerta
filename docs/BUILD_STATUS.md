@@ -30,7 +30,10 @@ offset 17.8 px against a 26 px allowance; no false interrupt from the Safari too
 **Two blocking failures found and since fixed (milestone 2b):** the tray only covered
 34–69% of the screen so the hard zone was never sampled, and the layout shifted at Start so
 every dot jumped. See `docs/QA_FINDINGS.md`. Session data in `docs/sessions/`.
-**The fixed build has not yet been run on a phone.**
+**The fixed build was re-run on the phone on 2026-11-13 and the fixes hold:** the tray now
+covers 91% of the screen, the practice round removed the learning effect entirely (pass 1 and
+pass 2 medians 738/739 ms), and a reach gradient appeared — top row 1226 ms against 634 ms in
+the middle, top-left 1993 ms. See `docs/QA_FINDINGS.md`.
 
 ## Not yet verified
 - Android Chrome; left-handed use; any second participant.
@@ -38,7 +41,9 @@ every dot jumped. See `docs/QA_FINDINGS.md`. Session data in `docs/sessions/`.
 - VoiceOver / TalkBack, 200% browser zoom.
 
 ## Next
-Re-run the fixed calibration on a phone, then build the comfort self-report.
+The comfort self-report. It is the control for the latency gradient, not just a screen:
+top-left measured 3x the middle, and only the person can say whether that is difficulty or
+simply distance from where their eyes were.
 
 ## Not built yet (by plan)
 Comfort self-report, reach map, Your setup screen, the task flow, counterbalanced timed

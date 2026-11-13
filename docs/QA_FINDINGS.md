@@ -132,3 +132,58 @@ Fixes for the two findings above. Emulated at the founder's own viewport, 393×6
 - Whether the top row is genuinely hard **to reach** or merely slower **to notice** is still
   unresolved, and no number from this instrument can settle it. The comfort self-report can.
 - Android, left-handed, VoiceOver / TalkBack, 200% zoom: all still untested.
+
+## 2026-11-13 — SECOND PHYSICAL RUN, fixed calibration
+
+Same phone, same person, same hand. Tray now **631 px of a 695 px screen (91%**, was 51%).
+30 measured taps in 27.3 s, all browser-reported touch, no page hides.
+Session file: `docs/sessions/2026-11-13-founder-iphone-right-v2.json`. **Still n = 1.**
+
+### The practice round did its job
+
+Pass 1 median **738 ms**, pass 2 median **739 ms** — no learning effect left to find. In the
+first run pass 1 was 676 ms and pass 2 560 ms, a 116 ms gain. The three unrecorded taps now
+absorb the learning, so the measured data is no longer contaminated by working out the task.
+
+### A gradient appeared once the hard zone was in range
+
+Median ms per cell, laid out as it sits on screen:
+
+|           | left | centre | right |
+|---|---|---|---|
+| top       | **1993** | 1052 | 1151 |
+| upper-mid | 868  | 643  | 592  |
+| middle    | 772  | 596  | 622  |
+| lower-mid | 818  | 609  | 772  |
+| bottom    | 1193 | 776  | 792  |
+
+Rows: top **1226** · upper-mid 643 · middle 634 · lower-mid 714 · bottom 905.
+Columns: left **972** · centre 702 · right 696.
+
+Top row is roughly **double** the middle, and the whole left column is slower than the
+right — for a right thumb, which is what reach would predict. In the old 34–69% tray the
+whole spread was 143 ms; it is now 321 ms top to bottom, with top-left at 3.1× the middle.
+
+### Supporting signals, from behaviour rather than timing
+
+- **A second finger appeared.** The run's only stray touch has `isPrimary: false` — a second
+  contact while top-left was lit, 1.5 s before that target was finally hit at 2806 ms. The
+  likeliest reading is a grip change to reach the far corner, which is exactly the
+  self-reported behaviour the brief asks about. The instrument logged it as an observation,
+  not an error, as designed.
+- **Taps undershoot upward.** Mean vertical offset is **+7.6 px below centre in the top row**
+  and −3.4 px above centre at the bottom: landing short of a stretch and over-travelling on
+  an easy one. Horizontal offset stays +6 to +9 px right across every row.
+- **The 52 px hit square is earning its size.** The worst tap, at top-left, was 21.9 px
+  horizontally off centre — 84% of the allowance. At a 44 px target that tap would have
+  missed, and the hardest cell is exactly where a miss would corrupt the measurement.
+
+### What this still does not establish
+
+Latency contains visual search. Top-left being 3× slower is consistent with "hard to reach"
+and with "furthest from where the eyes rest". **Nothing in this file can separate the two.**
+
+That makes the comfort self-report a test of the instrument, not just another screen: if the
+difficulty is real, top-left should come back labelled Hard; if the latency is mostly looking,
+it should come back Easy despite 2 seconds. That is a falsifiable prediction, written down
+before the question exists.
