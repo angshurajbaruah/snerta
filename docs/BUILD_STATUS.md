@@ -23,10 +23,20 @@ Node 22.23.4 · npm 10.9.9 · React 19 · Vite 8.3 · Vitest 5.1 · TypeScript 5
   412×915 and 430×932.
 - Comparison area measured as pixel-stable across a layout switch on three device profiles.
 
+## Verified on a physical phone (2026-11-13, n = 1)
+Founder's iPhone, Safari, right hand. 18/18 taps registered as touch; 17.8 s total; worst
+offset 17.8 px against a 26 px allowance; no false interrupt from the Safari toolbar.
+**One blocking usability failure found:** the first ~8 s are a comprehension failure, not a
+measurement — see `docs/QA_FINDINGS.md` FINDING 1. Session data in `docs/sessions/`.
+
 ## Not yet verified
-- **Any physical phone (iOS Safari, Android Chrome). This remains the main gap.**
-- Real rotation, browser-toolbar and pinch-zoom behaviour during calibration.
-- VoiceOver / TalkBack, 200% browser zoom, notched safe areas.
+- Android Chrome; left-handed use; any second participant.
+- Rotation and pinch-zoom interrupts (not triggered in the run).
+- VoiceOver / TalkBack, 200% browser zoom.
+
+## Next
+Unrecorded practice round before the measured sequence (FINDING 1), then the comfort
+self-report.
 
 ## Not built yet (by plan)
 Comfort self-report, reach map, Your setup screen, the task flow, counterbalanced timed

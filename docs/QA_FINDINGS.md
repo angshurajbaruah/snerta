@@ -43,3 +43,69 @@ Status codes: PASS / FAIL / PARTIAL / NOT TESTED. Emulated results are labelled 
   switches hands, not a measured optimum.
 - **The demo app changed** from a shopping flow to an inbox. The PRD's Add → Bag → Continue →
   Confirm task needs rebuilding against the new controls before any timed trial runs.
+
+## 2026-11-13 — FIRST PHYSICAL DEVICE RUN
+
+Founder's own iPhone, Safari, right hand, one-handed. Viewport 393×695, tray 333×355.
+Session file: `docs/sessions/2026-11-13-founder-iphone-right.json`. **n = 1.** Nothing below
+is evidence about people in general; it is evidence about whether the instrument works.
+
+### The instrument held up
+
+| Check | Result |
+|---|---|
+| All 18 taps registered as `touch`, no double counting | PASS |
+| Whole calibration | 17.8 s |
+| Worst tap offset from target centre | 17.8 px, against a 26 px allowance — 10.2 px of margin left. The 52 px hit square is correctly sized; no near-misses. |
+| Safari toolbar showing/hiding during the run | No false interrupt. Tolerating height-only viewport change (D6) was the right call. |
+| Page hidden / geometry interrupts | 0 |
+| Stray taps | 4, all logged as observations, none counted as errors or as hits |
+
+### FINDING 1 — people do not understand the first screen (highest priority)
+
+The first ~8 seconds are a comprehension failure, not a reach measurement:
+
+| When | Prompted | Actually tapped |
+|---|---|---|
+| −0.8 s | middle-right | bottom-centre |
+| +1.1 s | top-centre | bottom-right |
+| +2.6 s | top-centre | middle-centre |
+| +3.7 s | top-centre | middle-right |
+
+Then top-centre finally landed at **6918 ms**, against a median of 560 ms for everything
+after. The stray taps cluster where a right thumb rests, not near the prompted dot — the
+participant was tapping the tray, not the highlighted target.
+
+Consequences: the first two samples of every session are noise, and a participant who is
+confused for eight seconds has already formed an impression before the test starts.
+
+**Fix: an unrecorded practice round (2–3 taps) before the measured sequence**, which is
+standard for reaction-time tasks, plus a louder treatment for the active dot. Until that
+lands, the first two samples of any session should be discarded, and the current run's
+top-centre and middle-right pass-1 figures are unusable.
+
+### FINDING 2 — the timing gradient is plausible, and not interpretable yet
+
+Second pass only, so no learning confound and no outliers (one tap per cell, so these are
+single observations, not medians of anything meaningful):
+
+- rows: top **676 ms** · middle **559 ms** · bottom **533 ms**
+- columns: left **559 ms** · centre **484 ms** · right **726 ms**
+
+Learning is real and smaller than the row spread: pass 1 excluding the first two taps
+median 676 ms, pass 2 median 560 ms.
+
+The top row being slowest is consistent with reach being harder up there — and equally
+consistent with it simply taking longer to *notice* a dot further from where the eyes are
+resting. Latency contains visual search. **This is exactly why the reach map cannot be built
+from timing, and why the comfort self-report is the next thing to build.** The right column
+being slowest is unexplained and may be noise at n=1.
+
+### FINDING 3 — systematic rightward offset
+
+Mean tap lands **+5.5 px right, 1.7 px above** the target centre. Expected for a right
+thumb's contact patch. Harmless for hit detection at 52 px, but it must be corrected for if
+tap coordinates are ever used to *position* anything.
+
+### Still untested
+VoiceOver / TalkBack · 200% zoom · left-handed · Android Chrome · any second participant.
