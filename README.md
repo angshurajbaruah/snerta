@@ -8,7 +8,14 @@ account, no tracking, nothing uploaded.
 > nothing here has been shown to make anything faster, easier or better. That is the point of
 > the study still to come.
 
-## Run it
+## Run it on a phone, the easy way
+
+Download the repo, unzip it, and **double-click `Start snerta on my phone.command`**. It
+installs what it needs on first run, then prints a `http://<your-LAN-IP>:5173` address to
+open on a phone on the same Wi-Fi. Leave the Terminal window open while testing; close it to
+stop the server. macOS may ask you to right-click → Open the first time.
+
+## Run it from a terminal
 
 ```bash
 npm install
