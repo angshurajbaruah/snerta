@@ -1,6 +1,6 @@
 # build status
 
-**Updated:** 2026-11-14 · **Milestone:** 0–1 (spike) + 2a–2c (rebrand, calibration, symbol) + 3 (self-report and reach map) + 4 (the experiment) + 5 (ABBA trials and the study kit)
+**Updated:** 2026-11-14 · **Status: pilot closed at n = 4.** Milestones 0–1 (spike), 2a–2c (rebrand, calibration, symbol), 3 (self-report and reach map), 4 (the experiment), 5 (ABBA trials, study kit, drag handle)
 **Git:** `angshurajbaruah/snerta`, branch `main`.
 
 ## Toolchain (actual)
@@ -50,6 +50,21 @@ the middle, top-left 1993 ms. See `docs/QA_FINDINGS.md`.
 - Rotation and pinch-zoom interrupts (not triggered in the run).
 - VoiceOver / TalkBack, 200% browser zoom.
 
+## The pilot result (closed 2026-11-14, n = 4)
+Four balanced ABBA sessions, all on a 393×695 screen: one left-handed, one grip-switcher,
+two right-handed, one of them the author. Written up in `docs/PILOT_REPORT.md`.
+
+- **Time: unreadable in all four.** Every session's layout gap was smaller than that
+  person's own spread across two runs of a single layout.
+- **Comfort: better 2, level 1, worse 1.** One of the four sat at the 5/5 ceiling.
+- **Preference: snerta 2, none 2, Original 0.** Nobody preferred the current layout. The
+  only consistent finding, and a direction to test rather than a result.
+
+The speed claim is dropped (D81). What the pilot is actually worth is the four times the
+measurement caught a confident wrong answer: the 43% that was practice (D67), the delta
+smaller than the person's own noise (D84), the first-exposure asymmetry ABBA cannot fix
+(D88), and a pre-registered hypothesis that failed 2 of 4 and is reported anyway (D92).
+
 ## Where the evidence stands
 The reach premise is **cited, not measured** — see `docs/EVIDENCE_BASE.md` (D75–D78).
 snerta's own untested claim is narrower and unchanged: whether moving these three controls
@@ -57,13 +72,20 @@ to a lower rail in a web page helps, whether it is worth the content the rail di
 and whether people leave it on. Apple shipped the same intervention in iOS 15 and had to
 add a setting to undo it, so a mixed result is the expected one.
 
-## Next
-Run the **four-trial ABBA version** on a phone, end to end, and get real durations — the
-emulated ones are automation speed and mean nothing. The one real trial run on file
-(2026-11-14, v4) is the old two-trial design: snerta came out 7.1 s quicker, which is also
-what a second attempt looks like, and `scripts/analyse-sessions.cjs` correctly refuses to
-pool it. It is kept as a record, not as a finding. After a clean ABBA run on the phone, the
-five-person study, using `docs/SESSION_SCRIPT.md` and `docs/OBSERVATION_SHEET.md`.
+## Next, if a second round is ever run
+In this order, because the first one is what makes the rest readable:
+
+1. **Familiarisation task in each layout before the clock starts** (D90). Without it the
+   next round still cannot read a time.
+2. **A forced comparative question** beside the 1–5 comfort scale (D94), so someone at the
+   ceiling can still express a difference.
+3. **Pro Max and small-handed participants.** The published work says that is where the
+   effect should be largest; it is the cell with no data in it. Two synthetic fixtures in
+   `docs/synthetic/` cover the viewport for code purposes only and are not evidence.
+
+Also outstanding: the drag handle (D96–D100) has been checked in a real engine but the
+gesture has had limited time on a physical phone. Observation sheets were not filled in
+during the pilot, which is why P2's and P3's outlier runs have no explanation.
 
 Before that runs with other people, read the last section of the 2026-11-13 third-run entry
 in `docs/QA_FINDINGS.md`: every run so far is the founder reporting on his own hypothesis,
