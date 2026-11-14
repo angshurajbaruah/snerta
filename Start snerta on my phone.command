@@ -46,6 +46,30 @@ if [ "$needs_install" = "1" ]; then
   printf '\n'
 fi
 
+# A dev server left running from an earlier go — possibly from a different copy of
+# the folder — keeps port 5173. Vite would then quietly take 5174 while the line
+# below still said 5173, and the phone would show the old version from the old copy.
+# That is the likeliest cause of "I refreshed and nothing changed".
+HOLDER=$(lsof -nP -iTCP:5173 -sTCP:LISTEN -t 2>/dev/null | head -1)
+if [ -n "$HOLDER" ]; then
+  HOLDER_DIR=$(lsof -a -p "$HOLDER" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)
+  printf '  Port 5173 is already being used by something else.\n'
+  [ -n "$HOLDER_DIR" ] && printf '  It is running from: %s\n' "$HOLDER_DIR"
+  printf '\n  That is probably a server left over from last time. If it keeps\n'
+  printf '  running, your phone would load the OLD version from it.\n\n'
+  read -r -p '  Press Return to stop it and carry on, or close this window to cancel. '
+  kill "$HOLDER" 2>/dev/null
+  sleep 2
+  kill -9 "$HOLDER" 2>/dev/null
+  printf '\n  Stopped it.\n\n'
+fi
+
+# What is actually in this folder, read from the source rather than remembered, so
+# the phone and this window cannot disagree about which version is being served.
+BUILD=$(sed -n "s/.*build: '\([^']*\)'.*/\1/p" src/lib/export.ts 2>/dev/null | head -1)
+TRIAL_COMMAS=$(sed -n "s/^export const TARGETS[^=]*=[^[]*\[\(.*\)\].*/\1/p" src/lib/trial.ts 2>/dev/null | tr -cd ',' | wc -c | tr -d ' ')
+NEWEST=$(find src docs -type f -newer package.json 2>/dev/null | wc -l | tr -d ' ')
+
 IP=""
 for IFACE in en0 en1 en2; do
   IP=$(ipconfig getifaddr "$IFACE" 2>/dev/null) && [ -n "$IP" ] && break
@@ -60,7 +84,20 @@ else
   printf '   Mac is on Wi-Fi, then use the Network: line below.\n'
 fi
 printf '  ----------------------------------------------\n\n'
-printf '  If the phone shows an old version, pull down to refresh it.\n'
+
+printf '  Serving from: %s\n' "$PWD"
+if [ -n "$BUILD" ]; then
+  printf '  Version:      %s' "$BUILD"
+  [ "$TRIAL_COMMAS" -gt 0 ] && printf ' · %s timed tasks' "$((TRIAL_COMMAS + 1))"
+  printf '\n'
+else
+  printf '  Version:      could not read it from src/ — is this the right folder?\n'
+fi
+printf '\n'
+printf '  Check that against what you expect. If it says something older than\n'
+printf '  you were told, this is the wrong copy of the folder — not a stale page.\n\n'
+printf '  On the phone, a plain refresh is sometimes not enough in Safari.\n'
+printf '  Close the tab and open the link again instead.\n'
 printf '  Leave this window open while you test.\n\n'
 
-npm run dev -- --host
+npm run dev -- --host --strictPort
