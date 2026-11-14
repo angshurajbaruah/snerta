@@ -371,3 +371,78 @@ Also found and fixed today: `scripts/smoke-touch.cjs` had been failing for some 
 test, not a broken app, but a check that fails for its own reasons is worse than no check,
 because the failure stops meaning anything. It now asserts against the downloaded export
 (D72).
+
+## 2026-11-14 — the ABBA run, and what it took away
+
+First balanced four-trial run on a phone. Founder's iPhone, Safari, right hand, 393×695.
+`docs/sessions/2026-11-14-founder-iphone-right-v5-abba.json`. snerta went first this time,
+so the order alternated from v4.
+
+| | Original | snerta |
+|---|---|---|
+| Median time | 6.9 s | 6.7 s |
+| Comfort (mean of 2) | 2.5 | 4.5 |
+| Off-task taps | 0 | 0 |
+| Mean position | 2.5 | 2.5 |
+
+Balanced: true. Preference: snerta.
+
+**The speed claim did not survive the design change.** v4, unbalanced, had snerta 7.1 s
+quicker — a 43% win. v5, balanced, has it 0.25 s quicker, which is nothing. The comfort
+gap stayed: 2 points on a 5-point scale, and the same direction in both runs.
+
+The trial-by-trial times say why, and this is the most useful number the project has:
+
+```
+pos 1  snerta    7.96 s
+pos 2  Original  7.96 s
+pos 3  Original  5.87 s
+pos 4  snerta    5.37 s
+```
+
+First half 7.96 s, second half 5.62 s. **Practice was worth 2.34 s. The layout was worth
+0.25 s. The order effect was 9.2× the treatment effect.** In the two-trial design that
+2.34 s sat entirely on whichever layout ran second, which is exactly what produced v4's
+43%. D67 was not a precaution; without it every number this project generated would have
+been order, misreported as layout.
+
+What this leaves standing is narrower and more interesting than what was claimed on
+Thursday: **same speed, notably more comfortable, and preferred.** That is also consistent
+with Apple's iOS 15 outcome (D78) — if there is no task-speed benefit, the whole value is
+subjective, and subjective value is the kind that splits a user base rather than
+converting it. A 0.25 s difference also sits right on `describeDuration`'s 250 ms "about
+the same" threshold, which is the right place for it to sit.
+
+### The calibration reproduced both of Kim & Ji's specific findings
+
+Zone medians against an all-zone median of 651 ms, with the self-report beside them:
+
+| Zone | Median | Reported |
+|---|---|---|
+| top-left | 1588 ms | hard |
+| bottom-left | 1210 ms | stretch |
+| top-right | 981 ms | stretch |
+| fastest (lower-centre) | 464 ms | easy |
+
+Labels: 1 hard, 5 stretch, 9 easy, 0 unknown.
+
+Top-left slowest and the only zone called hard, matching the upper-left finding in
+`docs/EVIDENCE_BASE.md` §2. And **bottom-left is the second slowest and reported as a
+stretch**, which matches that paper's bottom-edge finding — the one that cuts against a
+naive version of snerta (D77). For a right-handed grip the bottom-left corner is a
+diagonal reach, so this is not surprising, but it is independent corroboration from a
+different method, and it is a reason not to push the rail any lower.
+
+No mismatches were flagged between the clock and the self-report: the slow zones were also
+the ones reported as awkward. Worth noting that agreement rather than only reporting
+disagreement, and worth not over-reading from one person.
+
+### A bug in the export, found by this file
+
+The export still carried `"comparison is null unless both trials were completed. Two
+trials cannot separate the layout from practice."` — a statement the four-trial design had
+already made false. The milestone-5 edit to `LIMITATIONS` had silently failed on an indent
+mismatch (a scripted replace expecting four spaces where the file had two), so the new
+ABBA wording never landed while every other part of the change did. Fixed. The export was
+describing its own method incorrectly, in the one field a reader would trust for that,
+which is worse than a visual bug.

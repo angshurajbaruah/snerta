@@ -50,7 +50,8 @@ export const LIMITATIONS = [
   'Non-target observations are touches inside the tray away from the active target; they are not confirmed errors.',
   'Trial durations cover the task only: from Start to the action that finished it, never the rating.',
   'offTaskTaps counts taps that did not advance the task. They are observations, not confirmed mistakes.',
-  'comparison is null unless both trials were completed. Two trials cannot separate the layout from practice.',
+  'Four trials run ABBA (first layout, other, other, first), so each layout averages the same position in the order. That spreads practice evenly between the layouts; it does not remove it.',
+  'comparison is null unless each layout has a completed run. comparison.balanced is false when the runs did not come out even, and the difference then still carries practice.',
   'One short session on one device cannot establish a general result.',
 ];
 
