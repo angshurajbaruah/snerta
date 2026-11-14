@@ -1574,3 +1574,49 @@ button {
   line-height: 1.3;
   color: var(--graphite);
 }
+
+/* ---------------------------------------------------------------- */
+/* Drag handle — moves the controls between header and thumb rail.   */
+/* Replaces the two-option toggle: the thing you grab is the thing   */
+/* that moves, so the move reads as yours and obviously reversible.  */
+/* ---------------------------------------------------------------- */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--graphite);
+  border-radius: 16px;
+  background: var(--ink);
+  color: var(--mist);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: grab;
+  touch-action: none; /* the gesture is ours; do not let the page scroll instead */
+  transition: background 140ms ease, border-color 140ms ease, transform 120ms ease;
+}
+.drag-handle:active { cursor: grabbing; }
+.drag-handle[disabled] { opacity: 0.4; cursor: default; }
+.drag-handle.is-armed {
+  background: var(--graphite);
+  border-color: var(--silver);
+}
+.drag-handle__grip {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--steel);
+  box-shadow: 0 6px 0 -1px var(--steel);
+  flex: none;
+}
+.drag-handle.is-armed .drag-handle__grip { background: var(--mist); box-shadow: 0 6px 0 -1px var(--mist); }
+.drag-handle__text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) {
+  .drag-handle { transition: none; }
+}

@@ -67,7 +67,7 @@ const AUDIT = `(() => {
     }],
     ['reach-map', async () => { await p.getByRole('button', { name: 'See my reach map' }).tap(); }],
     ['demo', async () => { await p.getByRole('button', { name: 'Try the layouts' }).tap(); }],
-    ['demo-snerta', async () => { await p.getByRole('radio', { name: 'With snerta.' }).tap(); }],
+    ['demo-snerta', async () => { await p.getByRole('button', { name: /Move the controls/ }).tap(); }],
   ];
   await p.goto('http://localhost:4173/');
   let total = 0;

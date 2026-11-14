@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { App } from '../src/App';
+import { Trial } from '../src/screens/Trial';
 
 afterEach(cleanup);
 
@@ -8,6 +9,19 @@ function toHandScreen() {
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Get started' }));
 }
+
+/** The handle names where the controls are going, not where they are. */
+const handle = () => screen.getByRole('button', { name: /Move the controls/ });
+/** Tap path — also the keyboard and screen-reader path. */
+const tapHandle = () => fireEvent.click(handle());
+/** Drag path: press, move far enough to commit, release. */
+const dragHandle = (deltaY: number) => {
+  const el = handle();
+  el.setPointerCapture = () => {};
+  fireEvent.pointerDown(el, { clientY: 200, isPrimary: true, pointerId: 1 });
+  fireEvent.pointerMove(el, { clientY: 200 + deltaY, isPrimary: true, pointerId: 1 });
+  fireEvent.pointerUp(el, { clientY: 200 + deltaY, isPrimary: true, pointerId: 1 });
+};
 
 describe('Welcome → Hand selection', () => {
   it('shows the brand and approved tagline', () => {
@@ -82,7 +96,7 @@ describe('Skip path and placement demo', () => {
     expect(names(header())).toEqual(['Back', 'More', 'Search']);
     expect(rail()).toBeNull();
 
-    fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
+    dragHandle(60); // pull the controls down to the thumb
 
     // snerta: all three move, so the person never reaches up during the task.
     expect(rail()!.className).toMatch(/app-rail--right/);
@@ -102,7 +116,7 @@ describe('Skip path and placement demo', () => {
     expect(rail()!.className).toMatch(/app-rail--center/);
 
     // Reverting is instant, nothing is lost, and the press count survives.
-    fireEvent.click(screen.getByRole('radio', { name: 'Original' }));
+    dragHandle(-60); // push them back up
     expect(rail()).toBeNull();
     expect(names(header())).toEqual(['Back', 'More', 'Search']);
   });
@@ -113,12 +127,12 @@ describe('Skip path and placement demo', () => {
     expect(screenEl().classList.contains('has-rail')).toBe(false);
     expect(document.querySelector('.fake-edge--bottom')).toBeNull();
 
-    fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
+    tapHandle();
     // The class is what carries the extra bottom padding in CSS; the fade sits with it.
     expect(screenEl().classList.contains('has-rail')).toBe(true);
     expect(document.querySelector('.fake-edge--bottom')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('radio', { name: 'Original' }));
+    tapHandle();
     expect(screenEl().classList.contains('has-rail')).toBe(false);
     expect(document.querySelector('.fake-edge--bottom')).toBeNull();
   });
@@ -126,7 +140,7 @@ describe('Skip path and placement demo', () => {
   it('fades the top edge in both layouts, so neither looks chopped', () => {
     toDemo('Right');
     expect(document.querySelector('.fake-edge--top')).toBeTruthy();
-    fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
+    tapHandle();
     expect(document.querySelector('.fake-edge--top')).toBeTruthy();
   });
 });
@@ -169,11 +183,95 @@ describe('Comparison stability', () => {
 
     // Nothing above the device may carry mode-dependent text.
     const above = children.slice(0, deviceAt).map((c) => c.textContent).join(' ');
-    fireEvent.click(screen.getByRole('radio', { name: 'With snerta.' }));
+    tapHandle();
     const aboveAfter = Array.from(document.querySelector('.demo')!.children)
       .slice(0, deviceAt)
       .map((c) => c.textContent)
       .join(' ');
     expect(aboveAfter).toBe(above);
+  });
+});
+
+describe('the grip, as a control someone has to be able to find and undo', () => {
+  function toDemo(hand: 'Left' | 'Right') {
+    toHandScreen();
+    fireEvent.click(screen.getByRole('radio', { name: hand }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip — just show me the demo' }));
+  }
+  const rail = () => document.querySelector('.app-rail');
+
+  it('works from a tap alone, so it is operable without a pointer drag', () => {
+    toDemo('Right');
+    expect(rail()).toBeNull();
+    tapHandle();
+    expect(rail()).toBeTruthy();
+    tapHandle();
+    expect(rail()).toBeNull();
+  });
+
+  it('is a real button, so the keyboard reaches it', () => {
+    toDemo('Right');
+    const el = handle();
+    expect(el.tagName).toBe('BUTTON');
+    expect(el.getAttribute('disabled')).toBeNull();
+  });
+
+  it('says which way it will move the controls, and that a tap also works', () => {
+    toDemo('Right');
+    expect(handle().getAttribute('aria-label')).toMatch(/down within reach.*activate/i);
+    tapHandle();
+    expect(handle().getAttribute('aria-label')).toMatch(/back to the top.*activate/i);
+  });
+
+  it('ignores a drag too short to be meant', () => {
+    toDemo('Right');
+    dragHandle(10);
+    expect(rail()).toBeNull();
+  });
+
+  it('does not move the controls twice when a drag is followed by the click event', () => {
+    toDemo('Right');
+    dragHandle(60);
+    expect(rail()).toBeTruthy();
+    fireEvent.click(handle()); // the click browsers fire after a drag
+    expect(rail()).toBeTruthy(); // still down, not toggled back
+  });
+
+  it('goes back up as readily as it came down', () => {
+    toDemo('Right');
+    dragHandle(60);
+    expect(rail()).toBeTruthy();
+    dragHandle(-60);
+    expect(rail()).toBeNull();
+  });
+
+  it('does not appear during a timed trial, where the layout is the condition', () => {
+    render(<Trial mode="kab" position={1} targetId="m2" hand="right" onDone={() => {}} />);
+    expect(screen.queryByRole('button', { name: /Move the controls/ })).toBeNull();
+  });
+});
+
+describe('the grip after a drag', () => {
+  function toDemo() {
+    toHandScreen();
+    fireEvent.click(screen.getByRole('radio', { name: 'Right' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip — just show me the demo' }));
+  }
+  const rail = () => document.querySelector('.app-rail');
+
+  it('still answers a tap once a drag has happened', () => {
+    // Caught in a real browser, invisible to jsdom until written down: the
+    // after-drag guard was never cleared, so every tap and every keyboard Enter
+    // after the first drag did nothing at all.
+    toDemo();
+    dragHandle(60);
+    expect(rail()).toBeTruthy();
+    fireEvent.click(handle()); // the browser's own post-drag click, swallowed
+    tapHandle(); // a real tap, which must work
+    expect(rail()).toBeNull();
+    tapHandle();
+    expect(rail()).toBeTruthy();
   });
 });

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BrandBar, PillButton } from '../components/ui';
+import { DragHandle } from '../components/DragHandle';
 import { InboxApp } from '../components/InboxApp';
 import { placementFor, type ControlId } from '../lib/layout';
 import type { AppView } from '../lib/trial';
@@ -81,28 +82,19 @@ export function PlacementDemo({
           {mode === 'standard' ? 'Controls in the header' : `Controls moved ${sideWord(placement.side)}`}
         </div>
         <p className="note note--wrap">
-          Have a proper go at both. Which is easier for you has not been tested yet.
+          Drag the grip to move them, either way, as often as you like. Which is easier for
+          you has not been tested yet.
         </p>
       </section>
 
       <div className="dock" style={{ flexDirection: 'column', gap: 10 }}>
-        <div role="radiogroup" aria-label="Compare layouts" className="segmented">
-          {(['standard', 'kab'] as Mode[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="radio"
-              aria-checked={mode === m}
-              className={`segmented__opt ${mode === m ? 'is-on' : ''}`}
-              onClick={() => {
-                setMode(m);
-                setMenuOpen(false);
-              }}
-            >
-              {m === 'standard' ? 'Original' : 'With snerta.'}
-            </button>
-          ))}
-        </div>
+        <DragHandle
+          mode={mode}
+          onChange={(m) => {
+            setMode(m);
+            setMenuOpen(false);
+          }}
+        />
         <PillButton onClick={onExit}>Start the comparison</PillButton>
         <button
           type="button"

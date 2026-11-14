@@ -29,6 +29,23 @@ if (files.length === 0) {
 
 const sessions = files.map((f) => ({ file: f, data: JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) }));
 
+/**
+ * Synthetic files exist to exercise code paths no real session covers (a Pro Max
+ * viewport, a left-handed rail). They are not evidence. This refuses to read them
+ * rather than filtering them quietly, because a filter can be removed by accident
+ * and a hard stop cannot.
+ */
+const fake = sessions.filter(({ data }) => data.synthetic === true);
+if (fake.length) {
+  console.error('\nRefusing to run: synthetic files are present in this folder.\n');
+  for (const { file } of fake) console.error(`  ${file}`);
+  console.error(
+    '\nSynthetic sessions are for testing code, never for results. Keep them in' +
+      '\ndocs/synthetic/ and point this script at docs/sessions/ instead.\n',
+  );
+  process.exit(2);
+}
+
 /* ------------------------------------------------------------------ */
 /* One row per trial, for anyone who would rather use a spreadsheet    */
 /* ------------------------------------------------------------------ */
