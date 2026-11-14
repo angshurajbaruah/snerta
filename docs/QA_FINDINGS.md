@@ -506,3 +506,79 @@ hand as fixed. Not changed yet; noted so it is not mistaken later for a data err
 P2's position-4 run took 12.9 s, the slowest of the four, and carried the only comfort
 rating below 4. Something happened in that run. The export cannot say what — this is
 exactly the gap `docs/OBSERVATION_SHEET.md` exists to fill, and it was not filled here.
+
+## 2026-11-14 — participant 3 (left-handed), and a confound ABBA cannot fix
+
+First left-handed participant. `docs/sessions/2026-11-14-p3-iphone-left-abba.json`.
+Original first this time.
+
+```
+pos 1  Original  10.6 s   comfort 4   off-task 0
+pos 2  snerta    29.7 s   comfort 5   off-task 3
+pos 3  snerta     7.6 s   comfort 5   off-task 0
+pos 4  Original   9.8 s   comfort 4   off-task 0
+```
+
+Medians: Original 10.2 s, snerta 18.6 s. On the face of it snerta is 8.4 s slower. The new
+`insideNoise` flag fired on its first real use and is correct to: snerta's own two runs
+differ by 22.1 s, far more than the 8.4 s between layouts. Nothing about the size of that
+gap is readable. The person rated snerta 5/5 twice against 4/4, and **preferred snerta**.
+
+**The 29.7 s run is the finding, not the noise.** It carries every off-task tap in the
+entire dataset — 3 of them, against 0 in all eleven other trials across three people. The
+next snerta run was 7.6 s, the fastest trial of the four. That is not a layout being slow.
+That is a person finding out where the controls went, once, and then being quick.
+
+### ABBA balances position. It does not balance familiarity.
+
+This is a real confound and it is still live:
+
+- **Original is a lifetime habit.** Every app this person has ever used puts back and search
+  at the top. Their first Original run starts with zero discovery cost.
+- **snerta is novel.** Its first run always includes the cost of finding the rail.
+- ABBA shares out *practice at the task* evenly. It cannot share out *familiarity with the
+  layout*, because one layout arrives pre-learned and the other does not.
+
+So the first snerta run is systematically penalised in every session, and no amount of
+counterbalancing by position repairs it. Looking back with this in mind, the same shape is
+visible in P2: their slower snerta run was also their first one.
+
+This is the same class of error as the two-trial design (D67) — a cost that looks like the
+treatment because it always lands on the same condition. It was not visible until someone
+who had never seen the prototype used it.
+
+**The fix is a familiarisation task in each layout before the clock starts**, so discovery
+is spent outside the measurement. The preview screen already exists; it is evidently not
+doing this job, either because it is skippable or because looking is not the same as using.
+
+### Not changing it mid-pilot
+
+The fix is **not** being shipped now. Sessions 4 and 5 are expected today, and changing the
+instrument between participant 3 and participant 4 would mean the five sessions no longer
+measure the same thing and cannot be pooled. A known, documented confound that applies
+equally to all five is worth more than a better instrument applied to some of them.
+
+Finish the pilot on the current build. The familiarisation change is the next milestone,
+and the pilot write-up states this confound plainly rather than hiding behind the
+`insideNoise` flag.
+
+### The D86 hypothesis took a hit
+
+| | Top row reported | Predicted | Preference |
+|---|---|---|---|
+| Founder | hard / stretch / stretch | helps | snerta ✓ |
+| P2 | stretch / easy / stretch | no benefit | none ✓ |
+| P3 | easy / easy / hard | no benefit | **snerta ✗** |
+
+Two of three. At n = 3 that is indistinguishable from chance, so the hypothesis is
+**weakened, not dead and certainly not confirmed**. P3's map is the flattest yet (540–894 ms
+across all zones, against the founder's 464–1588 ms), which is consistent with their
+changing grip during use — a moving grip would even out reach. Worth noting that a person
+with no bad zone still preferred the rail, which if it holds would mean the benefit is not
+only about reach.
+
+Also: P3 reported **top-right** as hard, but the clock's slowest zone was **top-left**
+(894 ms). For a left-hander top-right is the far diagonal, so the self-report is plausible;
+the clock disagrees. Below the 1.5× threshold so no mismatch was flagged, correctly — the
+whole profile is flat. Recorded because it is the first case of the two accounts pointing
+at different corners.
