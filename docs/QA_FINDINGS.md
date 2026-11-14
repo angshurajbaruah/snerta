@@ -303,3 +303,47 @@ sitting over another needs a real engine; `scripts/trial-smoke.cjs` is where tha
 Durations from the emulated run (0.4–1.2 s) are automation speed and mean nothing. Real
 timings need a person. Also untested: Android, left-handed, the 'both hands' centre rail
 under a real task, VoiceOver / TalkBack, 200% zoom.
+
+## 2026-11-14 — FIRST COMPLETE RUN, calibration through trials
+
+Founder's iPhone, right hand, full journey. Both trials completed, nothing interrupted.
+Session: `docs/sessions/2026-11-14-founder-iphone-right-v4-full-run.json`.
+
+### The machinery works end to end
+
+| | position | time | comfort | off-task taps |
+|---|---|---|---|---|
+| Original | 1 | 16.4 s | 2 | 1 |
+| With snerta. | 2 | 9.3 s | 4 | 0 |
+
+Preference: snerta. Deltas: **7.1 s faster**, **+2 comfort**. No interruptions, no voided runs.
+
+Real human durations at last — 9 to 16 seconds, against the 0.4 s of the emulated walkthrough.
+The task takes long enough to be worth timing and short enough not to tire anyone.
+
+### The result cannot be read, and the reason is structural
+
+**Original ran first. snerta ran second.** In this session "second" and "snerta" are the same
+column of data, and nothing in the file can separate them.
+
+A 43% improvement from a first to a second attempt is ordinary practice. By trial 2 the person
+knows the task, knows the menu holds Archive, and knows which name to look for. The comfort
+jump from 2 to 4 is open to the same reading, plus knowing which layout is the product.
+
+Counterbalancing was designed in across *participants*, which does nothing for a single
+session. **This run is evidence the experiment runs, not evidence about the hypothesis.**
+
+### Calibration, now four runs deep and stable
+
+- top / middle row ratio **1.51×** here, against 1.85× and 1.80× before.
+- easy zones **614 ms** vs stretch and hard **900 ms** — a 1.47× gap, close to the 1.37× last time.
+- **top-left slowest for the third run running** (1378 ms, labelled hard).
+- **bottom-left slow in every run** (898 ms here, labelled stretch; 1193 ms and 961 ms before).
+  The far bottom corner for a right thumb looks like a real second trouble spot, not noise.
+- grip reported as changed, again.
+
+### What would actually settle it
+
+1. **Somebody else, starting with snerta.** If snerta-first also comes out faster, order stops
+   being the obvious explanation.
+2. **Or balance the order inside one session** — see the open question in `DECISION_LOG`.
