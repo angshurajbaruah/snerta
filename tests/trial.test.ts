@@ -287,3 +287,41 @@ describe('comfort ratings', () => {
     expect(all).toHaveLength(5);
   });
 });
+
+describe('a difference smaller than the person’s own variation is not a reading', () => {
+  const r = (mode: Mode, position: 1 | 2 | 3 | 4, durationMs: number): TrialResult => ({
+    mode, position, targetId: TARGETS[position - 1], durationMs,
+    comfort: 4, offTaskTaps: 0, completed: true,
+  });
+
+  it('records each layout’s own run-to-run spread', () => {
+    const c = compare([
+      r('standard', 1, 8000), r('kab', 2, 9000), r('kab', 3, 12500), r('standard', 4, 10100),
+    ])!;
+    expect(c.standard.spreadMs).toBe(2100);
+    expect(c.kab.spreadMs).toBe(3500);
+    expect(c.withinSpreadMs).toBe(3500);
+  });
+
+  it('flags a layout gap that is smaller than that spread', () => {
+    // The real n=2 session: 1.2s between layouts, 3.5s within one of them.
+    const c = compare([
+      r('kab', 1, 9368), r('standard', 2, 12431), r('standard', 3, 7338), r('kab', 4, 12866),
+    ])!;
+    expect(Math.abs(c.durationDeltaMs!)).toBeLessThan(c.withinSpreadMs!);
+    expect(c.insideNoise).toBe(true);
+  });
+
+  it('does not flag a gap that clears the spread', () => {
+    const c = compare([
+      r('standard', 1, 12000), r('kab', 2, 6000), r('kab', 3, 6200), r('standard', 4, 12200),
+    ])!;
+    expect(c.insideNoise).toBe(false);
+  });
+
+  it('cannot judge noise from one run per layout, and says so by not claiming it', () => {
+    const c = compare([r('standard', 1, 8000), r('kab', 2, 11000)])!;
+    expect(c.withinSpreadMs).toBeNull();
+    expect(c.insideNoise).toBe(false);
+  });
+});

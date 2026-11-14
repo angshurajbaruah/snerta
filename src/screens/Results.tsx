@@ -100,7 +100,13 @@ export function Results({
                   <span className="versus__l">With snerta.</span>
                 </div>
               </div>
-              <p className="note">{describeDuration(c.durationDeltaMs!)}</p>
+              <p className="note">
+                {c.insideNoise
+                  ? `Too close to call. Doing the same task twice in the same layout, your own
+                     times varied by ${secs(c.withinSpreadMs)} — more than the ${secs(Math.abs(c.durationDeltaMs!))}
+                     between the two layouts. On this many runs that gap is not a reading.`
+                  : describeDuration(c.durationDeltaMs!)}
+              </p>
             </section>
 
             <section className="bento" aria-labelledby="c-h">

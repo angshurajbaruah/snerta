@@ -72,6 +72,7 @@ function summarise(trials, mode) {
   return {
     n: runs.length,
     durationMs: times.length ? median(times) : null,
+    spreadMs: times.length > 1 ? Math.max(...times) - Math.min(...times) : null,
     comfort: comforts.length ? mean(comforts) : null,
     offTask: runs.reduce((a, t) => a + (t.offTaskTaps ?? 0), 0),
     meanPosition: runs.length ? mean(runs.map((t) => t.position)) : null,
@@ -125,12 +126,22 @@ for (const { file, data } of sessions) {
     continue;
   }
 
+  const spreads = [std.spreadMs, kab.spreadMs].filter((v) => typeof v === 'number');
+  const within = spreads.length ? Math.max(...spreads) : null;
   const dDur = kab.durationMs - std.durationMs;
+  const insideNoise = within !== null && Math.abs(dDur) < within;
   const dCom = std.comfort !== null && kab.comfort !== null ? kab.comfort - std.comfort : null;
   console.log(
     `  → snerta ${dDur > 0 ? 'slower' : 'quicker'} by ${s1(Math.abs(dDur))}` +
       (dCom === null ? ', comfort not rated in both' : `, comfort ${dCom > 0 ? '+' : ''}${f1(dCom)}`),
   );
+
+  if (insideNoise) {
+    console.log(
+      `  ⚠ inside this person's own variation: they varied by ${s1(within)} across two runs of` +
+        ` the same layout, more than the ${s1(Math.abs(dDur))} between layouts. Direction only.`,
+    );
+  }
 
   if (!balanced) {
     console.log(
@@ -139,7 +150,7 @@ for (const { file, data } of sessions) {
     );
     dropped.push({ file, why: `unbalanced run (${completed}/${attempted} completed)` });
   } else {
-    usable.push({ file, dDur, dCom, preference: data.preference ?? null });
+    usable.push({ file, dDur, dCom, insideNoise, preference: data.preference ?? null });
   }
   console.log();
 }
@@ -162,6 +173,13 @@ if (usable.length === 0) {
   console.log(`n = ${usable.length} ${usable.length === 1 ? 'person' : 'people'}`);
   console.log(`Time with snerta:  quicker ${quicker} · about the same ${same} · slower ${slower}`);
   console.log(`  median change ${s1(median(d))}, range ${s1(Math.min(...d))} to ${s1(Math.max(...d))}`);
+  const noisy = usable.filter((u) => u.insideNoise).length;
+  if (noisy) {
+    console.log(
+      `  ${noisy} of ${usable.length} had a layout gap smaller than their own run-to-run spread,`,
+    );
+    console.log('  so for those the direction is all that can be read, not the size.');
+  }
 
   const c = usable.map((u) => u.dCom).filter((v) => typeof v === 'number');
   if (c.length) {
@@ -197,5 +215,7 @@ console.log('• A session run by whoever built snerta is not independent eviden
 console.log('  carefully it was recorded. Check how many of the files above are the founder.');
 console.log('• Four trials per person spread practice evenly between the layouts. They do');
 console.log('  not remove it, and they do nothing about expecting snerta to win.');
+console.log('• Four runs cannot resolve a one-second effect in one person: so far the');
+console.log('  spread within a single layout has been larger than the gap between them.');
 console.log('• Browser-reported touch is not proof a thumb was used; time is not comfort.');
 console.log();

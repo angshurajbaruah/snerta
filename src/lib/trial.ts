@@ -217,6 +217,12 @@ export type ModeSummary = {
   offTaskTaps: number;
   /** Mean position in the order. Equal across layouts is what balance means. */
   meanPosition: number | null;
+  /**
+   * Gap between this layout's own fastest and slowest completed run. How much the
+   * same person varies doing the same thing in the same layout, which is the yardstick
+   * any between-layout difference has to beat.
+   */
+  spreadMs: number | null;
 };
 
 function summarise(mode: Mode, results: readonly TrialResult[]): ModeSummary {
@@ -230,6 +236,7 @@ function summarise(mode: Mode, results: readonly TrialResult[]): ModeSummary {
     comfort: comforts.length ? comforts.reduce((a, b) => a + b, 0) / comforts.length : null,
     offTaskTaps: runs.reduce((n, r) => n + r.offTaskTaps, 0),
     meanPosition: runs.length ? runs.reduce((n, r) => n + r.position, 0) / runs.length : null,
+    spreadMs: times.length > 1 ? Math.max(...times) - Math.min(...times) : null,
   };
 }
 
@@ -255,6 +262,20 @@ export type Comparison = {
    */
   balanced: boolean;
   completedCount: number;
+  /**
+   * The larger of the two layouts' own spreads — how much this person varied doing
+   * the same thing twice in the same layout.
+   */
+  withinSpreadMs: number | null;
+  /**
+   * True when the difference between the layouts is smaller than that spread. The
+   * number is then not a reading: the same person varies by more than this between
+   * two runs of the identical layout, so the screen must say so instead of reporting
+   * the delta as though it meant something. Found with real data at n=2, where the
+   * between-layout difference was 0.25 s against within-layout spreads of 2.1–2.6 s,
+   * and 1.2 s against 3.5–5.1 s.
+   */
+  insideNoise: boolean;
 };
 
 /**
@@ -268,10 +289,15 @@ export function compare(results: readonly TrialResult[]): Comparison | null {
   if (standard.runs.length === 0 || kab.runs.length === 0) return null;
   if (standard.durationMs === null || kab.durationMs === null) return null;
   const first = [...results].sort((a, b) => a.position - b.position)[0];
+  const delta = kab.durationMs - standard.durationMs;
+  const spreads = [standard.spreadMs, kab.spreadMs].filter((v): v is number => v !== null);
+  const withinSpreadMs = spreads.length ? Math.max(...spreads) : null;
   return {
     standard,
     kab,
-    durationDeltaMs: kab.durationMs - standard.durationMs,
+    durationDeltaMs: delta,
+    withinSpreadMs,
+    insideNoise: withinSpreadMs !== null && Math.abs(delta) < withinSpreadMs,
     comfortDelta:
       standard.comfort !== null && kab.comfort !== null
         ? Math.round((kab.comfort - standard.comfort) * 10) / 10

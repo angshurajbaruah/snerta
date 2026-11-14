@@ -34,6 +34,9 @@ export type SessionExport = {
     durationDeltaMs: number;
     comfortDelta: number | null;
     balanced: boolean;
+    withinSpreadMs: number | null;
+    /** True when the layout difference is smaller than the person's own run-to-run spread. */
+    insideNoise: boolean;
     completedCount: number;
     standard: { durationMs: number | null; comfort: number | null; meanPosition: number | null };
     kab: { durationMs: number | null; comfort: number | null; meanPosition: number | null };
@@ -52,6 +55,7 @@ export const LIMITATIONS = [
   'offTaskTaps counts taps that did not advance the task. They are observations, not confirmed mistakes.',
   'Four trials run ABBA (first layout, other, other, first), so each layout averages the same position in the order. That spreads practice evenly between the layouts; it does not remove it.',
   'comparison is null unless each layout has a completed run. comparison.balanced is false when the runs did not come out even, and the difference then still carries practice.',
+  'comparison.insideNoise is true when the gap between the layouts is smaller than the same person\u2019s spread across two runs of one layout. The delta is then not a reading, and was not treated as one.',
   'One short session on one device cannot establish a general result.',
 ];
 
@@ -90,6 +94,8 @@ export function buildSessionExport(args: {
           durationDeltaMs: c.durationDeltaMs!,
           comfortDelta: c.comfortDelta,
           balanced: c.balanced,
+          withinSpreadMs: c.withinSpreadMs,
+          insideNoise: c.insideNoise,
           completedCount: c.completedCount,
           standard: {
             durationMs: c.standard.durationMs,

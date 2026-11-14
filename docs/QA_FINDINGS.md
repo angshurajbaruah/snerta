@@ -446,3 +446,63 @@ mismatch (a scripted replace expecting four spaces where the file had two), so t
 ABBA wording never landed while every other part of the change did. Fixed. The export was
 describing its own method incorrectly, in the one field a reader would trust for that,
 which is worse than a visual bug.
+
+## 2026-11-14 — participant 2, and the number the screen should not have shown
+
+Second balanced ABBA run, first person who is not the founder. Right hand, same 393×695
+viewport. `docs/sessions/2026-11-14-p2-iphone-right-abba.json`.
+
+| | Original | snerta |
+|---|---|---|
+| Median time | 9.9 s | 11.1 s |
+| Comfort | 4.0 | 3.5 |
+| Off-task taps | 0 | 0 |
+
+Balanced: true. Preference: **none**. This is the first result that does not favour snerta,
+and it was collected on the same protocol that produced the favourable one.
+
+**But neither session can actually read its own number.** Put the two side by side:
+
+| | Founder | P2 |
+|---|---|---|
+| Between layouts | 0.25 s | 1.23 s |
+| Spread within snerta's own two runs | 2.58 s | 3.50 s |
+| Spread within Original's own two runs | 2.09 s | 5.09 s |
+
+In both people the same person doing the same task twice in the *same* layout varied by
+several times the gap between the layouts. P2's slowest run of all four was position 4,
+which is where practice should have made them quickest. So the per-person delta is not a
+measurement, and the results screen was presenting it as one — "With snerta the task took
+1.2 s longer" is a sentence this data does not support.
+
+Fixed. `compare()` now carries `withinSpreadMs` and `insideNoise`, and when the gap is
+smaller than the person's own spread the screen says **"Too close to call"** and shows both
+figures instead of the delta. `analyse-sessions.cjs` flags the same thing, and both
+sessions on file trip it. Four runs per person cannot resolve a one-second effect; across
+people the *direction* is the only thing readable, which is what the pooled view counts.
+
+### P2's reach profile is the inverse of the founder's
+
+| | Founder | P2 |
+|---|---|---|
+| Hardest zone | top-left (1588 ms) | **bottom-left** (1078 ms) |
+| Top row | hard / stretch / stretch | stretch / **easy** / stretch |
+| Grip changes during use | no | **yes** |
+
+For P2 the top of the screen is largely fine and the bottom-left corner is the problem.
+snerta's whole premise is that the top is the problem, so on their own map the intervention
+is aimed somewhere they do not need help — and their result was no preference and a
+slower-but-unreadable time. n = 2 cannot establish this, but it is a sharp, testable
+hypothesis the app is already equipped to check: **snerta may only help people whose reach
+map is bad at the top, and the app measures that before the trials run.** Worth watching
+in the next three sessions rather than concluding now.
+
+Also an instrument finding: P2 chose **right** on the hand question but answered **yes** to
+the grip-change question. Those two answers describe different things and the app treats
+hand as fixed. Not changed yet; noted so it is not mistaken later for a data error.
+
+### Open question for the session notes
+
+P2's position-4 run took 12.9 s, the slowest of the four, and carried the only comfort
+rating below 4. Something happened in that run. The export cannot say what — this is
+exactly the gap `docs/OBSERVATION_SHEET.md` exists to fill, and it was not filled here.
