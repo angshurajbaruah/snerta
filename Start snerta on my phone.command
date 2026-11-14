@@ -68,7 +68,20 @@ fi
 # the phone and this window cannot disagree about which version is being served.
 BUILD=$(sed -n "s/.*build: '\([^']*\)'.*/\1/p" src/lib/export.ts 2>/dev/null | head -1)
 TRIAL_COMMAS=$(sed -n "s/^export const TARGETS[^=]*=[^[]*\[\(.*\)\].*/\1/p" src/lib/trial.ts 2>/dev/null | tr -cd ',' | wc -c | tr -d ' ')
-NEWEST=$(find src docs -type f -newer package.json 2>/dev/null | wc -l | tr -d ' ')
+
+# A fingerprint of every source file, so the stamp changes whenever ANY of them does.
+# The build string alone does not: it only moves at a milestone, so a day of real changes
+# can leave it identical and the window then claims nothing has changed when plenty has.
+SRCSUM=$(find src -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' \) -exec shasum {} + 2>/dev/null \
+  | shasum | cut -c1-7)
+SRCWHEN=$(find src -type f -newer package.json -print0 2>/dev/null | xargs -0 stat -f '%m' 2>/dev/null \
+  | sort -rn | head -1)
+[ -n "$SRCWHEN" ] && SRCWHEN=$(date -r "$SRCWHEN" '+%a %H:%M' 2>/dev/null)
+
+# Named features, so the window can be checked against what you were told is in this build.
+FEATURES=""
+grep -q 'DragHandle' src/screens/PlacementDemo.tsx 2>/dev/null && FEATURES="drag grip"
+grep -q 'insideNoise' src/lib/trial.ts 2>/dev/null && FEATURES="${FEATURES:+$FEATURES, }noise guard"
 
 IP=""
 for IFACE in en0 en1 en2; do
@@ -90,12 +103,19 @@ if [ -n "$BUILD" ]; then
   printf '  Version:      %s' "$BUILD"
   [ "$TRIAL_COMMAS" -gt 0 ] && printf ' · %s timed tasks' "$((TRIAL_COMMAS + 1))"
   printf '\n'
+  printf '  Source:       %s' "$SRCSUM"
+  [ -n "$SRCWHEN" ] && printf ' · last edited %s' "$SRCWHEN"
+  printf '\n'
+  [ -n "$FEATURES" ] && printf '  Includes:     %s\n' "$FEATURES"
 else
   printf '  Version:      could not read it from src/ — is this the right folder?\n'
 fi
 printf '\n'
-printf '  Check that against what you expect. If it says something older than\n'
-printf '  you were told, this is the wrong copy of the folder — not a stale page.\n\n'
+printf '  Check "Includes" against what you were told is in this build. If a\n'
+printf '  feature is missing from that line, the files are wrong — not the page.\n'
+printf '  If it is listed but you cannot see it, the page is stale: close the\n'
+printf '  Safari tab completely and open the link again.\n\n'
+printf '  The drag grip is on the Before / after screen only, not in the tasks.\n\n'
 printf '  On the phone, a plain refresh is sometimes not enough in Safari.\n'
 printf '  Close the tab and open the link again instead.\n'
 printf '  Leave this window open while you test.\n\n'
