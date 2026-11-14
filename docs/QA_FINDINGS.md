@@ -582,3 +582,73 @@ Also: P3 reported **top-right** as hard, but the clock's slowest zone was **top-
 the clock disagrees. Below the 1.5× threshold so no mismatch was flagged, correctly — the
 whole profile is flat. Recorded because it is the first case of the two accounts pointing
 at different corners.
+
+## 2026-11-14 — participant 4 (switches grip), and the first-exposure cost across four people
+
+First participant to answer **"switches"** on the hand question, so the first run of the
+**centred** rail. `docs/sessions/2026-11-14-p4-iphone-both-abba.json`.
+
+```
+pos 1  Original  3.2 s   comfort 5   off-task 0
+pos 2  snerta    7.0 s   comfort 5   off-task 0
+pos 3  snerta    3.7 s   comfort 5   off-task 0
+pos 4  Original  5.2 s   comfort 5   off-task 0
+```
+
+Medians: Original 4.2 s, snerta 5.3 s. `insideNoise` true again — their own snerta runs
+differ by 3.2 s against 1.2 s between layouts. Preference: **none**.
+
+Fastest participant so far by a wide margin, and the flattest reach map yet: every zone
+between 389 and 659 ms, against the founder's 464–1588 ms. Only two zones not called easy.
+The centred rail drew no off-task taps and no complaint in the data.
+
+**They rated all four trials 5 out of 5.** Comfort cannot discriminate for this person —
+the scale is at its ceiling in both layouts, so the 0.0 comfort delta means "no room to
+move", not "no difference". A measure that can only go down for some participants is worth
+noting as a limit of the 1–5 scale.
+
+### First-exposure cost, now measurable across four people
+
+Does each layout get faster from its own first run to its own second? If snerta gains more,
+that extra is discovery sitting on top of ordinary practice.
+
+| | Hand | snerta gain | Original gain | Difference |
+|---|---|---|---|---|
+| Founder | right | +2.58 s | +2.09 s | +0.49 s |
+| P2 | right | −3.50 s | +5.09 s | **−8.59 s** |
+| P3 | left | +22.08 s | +0.77 s | **+21.31 s** |
+| P4 | switches | +3.23 s | −2.03 s | +5.26 s |
+
+snerta improved more in **3 of 4**, median +2.88 s. But the median is carried almost
+entirely by P3's 21.3 s, and P2 goes firmly the other way. Drop P3 and the remaining
+differences are +0.49, −8.59 and +5.26 — no pattern at all. So D88 is **consistent with the
+data and not demonstrated by it**. The honest position: a plausible mechanism, visible
+clearly in one person, not established in four.
+
+This is a reason to ship the familiarisation fix (D90) and stop arguing about it from
+four sessions, rather than a reason to claim the effect now.
+
+### D86 is not supported
+
+Coding "top row bad" as at least two of the three top zones reported not-easy:
+
+| | Top row | Predicted | Preference | |
+|---|---|---|---|---|
+| Founder | hard / stretch / stretch | helps | snerta | ✓ |
+| P2 | stretch / easy / stretch | helps | none | ✗ |
+| P3 | easy / easy / hard | no benefit | snerta | ✗ |
+| P4 | easy / easy / stretch | no benefit | none | ✓ |
+
+**2 of 4 — a coin flip.** The reach map did not predict who preferred snerta. D86 is
+recorded as unsupported rather than quietly dropped, because it was written down in advance
+and this is what happened to it.
+
+### Where the pilot stands at n = 4
+
+- **Time: unreadable in every single session.** All four tripped `insideNoise`. Direction
+  was snerta-slower in 3 of 4, which given the first-exposure asymmetry is what would be
+  expected whether or not the layout matters.
+- **Comfort: better 2, level 1, worse 1.** No pattern, and one of the four was at ceiling.
+- **Preference: snerta 2, none 2, Original 0.** Nobody preferred Original. That is the only
+  consistent thing in the dataset, and at n = 4 with the builder in the room it is a
+  direction to test, not a result.

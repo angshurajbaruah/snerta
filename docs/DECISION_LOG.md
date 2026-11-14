@@ -162,3 +162,12 @@ Dated, newest last. Product/brand decisions from the brief are locked; this log 
 | D89 | **The fix is not shipped mid-pilot.** Sessions 4 and 5 run on the current build. | Changing the instrument between participants means the five sessions do not measure the same thing and cannot be pooled. A documented confound applied equally to all five is worth more than a better instrument applied to three of them. | Yes — after the pilot |
 | D90 | Next milestone: a **familiarisation task in each layout before the timed trials**, so discovery is spent outside the clock. The preview screen is not doing this job — looking at a layout is not using it. | The only way to remove D88 rather than caveat it. | — |
 | D91 | D86 (snerta helps people whose map is bad at the top) is **weakened, not confirmed or dead**: 2 of 3. | P3's top row is mostly easy and they still preferred snerta. At n = 3 this is indistinguishable from chance. If it holds that someone with no bad zone prefers the rail, the benefit is not only about reach — which would be a larger finding than the original hypothesis. | — |
+
+## 2026-11-14 — the pilot at n = 4
+
+| # | Decision | Why | Reversible? |
+|---|---|---|---|
+| D92 | **D86 is recorded as unsupported.** The reach map did not predict preference: 2 of 4. | It was written down in advance, so it is reported as it came out rather than dropped. Coding was "at least two of the three top zones not easy". | — |
+| D93 | **D88 is downgraded to plausible-but-unproven.** snerta improved more from first run to second in 3 of 4, median +2.88 s, but the median is carried by one participant's 21.3 s and another goes the other way. | Four sessions cannot settle it. The familiarisation fix (D90) removes the question instead of arguing it from this data. | — |
+| D94 | Noted: the **1–5 comfort scale hit its ceiling** for P4, who rated all four trials 5. | A 0.0 comfort delta there means "no room to move", not "no difference". Worth considering a forced comparative question ("which felt easier?") alongside the absolute scale in the next build. | — |
+| D95 | The pilot's honest headline at n = 4: **time unreadable in every session, comfort mixed, nobody preferred Original.** | All four tripped `insideNoise`. The only consistent finding is the absence of anyone choosing the current layout, which at n = 4 with the builder present is a direction to test, not a result. | — |

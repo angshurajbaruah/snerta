@@ -136,6 +136,24 @@ for (const { file, data } of sessions) {
       (dCom === null ? ', comfort not rated in both' : `, comfort ${dCom > 0 ? '+' : ''}${f1(dCom)}`),
   );
 
+  // First-exposure cost: Original arrives pre-learned, snerta does not. If snerta gains
+  // more from its first run to its second, that gap is discovery on top of practice.
+  const gain = (m) => {
+    const r = (trials ?? []).filter((t) => t.mode === m && t.completed).sort((a, b) => a.position - b.position);
+    return r.length === 2 && r.every((t) => typeof t.durationMs === 'number')
+      ? r[0].durationMs - r[1].durationMs
+      : null;
+  };
+  const gk = gain('kab');
+  const gs = gain('standard');
+  if (gk !== null && gs !== null) {
+    console.log(
+      `  run 1 → run 2:  snerta ${gk >= 0 ? 'gained' : 'lost'} ${s1(Math.abs(gk))},` +
+        ` Original ${gs >= 0 ? 'gained' : 'lost'} ${s1(Math.abs(gs))}` +
+        (gk > gs ? '  (discovery cost on snerta)' : ''),
+    );
+  }
+
   if (insideNoise) {
     console.log(
       `  ⚠ inside this person's own variation: they varied by ${s1(within)} across two runs of` +
@@ -150,7 +168,7 @@ for (const { file, data } of sessions) {
     );
     dropped.push({ file, why: `unbalanced run (${completed}/${attempted} completed)` });
   } else {
-    usable.push({ file, dDur, dCom, insideNoise, preference: data.preference ?? null });
+    usable.push({ file, dDur, dCom, insideNoise, firstExposure: gk !== null && gs !== null ? gk - gs : null, preference: data.preference ?? null });
   }
   console.log();
 }
@@ -189,6 +207,16 @@ if (usable.length === 0) {
     console.log(`  median change ${f1(median(c))} points (rated by ${c.length} of ${usable.length})`);
   } else {
     console.log('Comfort: not rated in both layouts by anyone, so nothing to report');
+  }
+
+  const fe = usable.map((u) => u.firstExposure).filter((v) => typeof v === 'number');
+  if (fe.length) {
+    const worse = fe.filter((v) => v > 0).length;
+    console.log(
+      `First-exposure: snerta improved more from its 1st run to its 2nd in ${worse} of ${fe.length},` +
+        ` median ${s1(median(fe))}`,
+    );
+    console.log('  Original arrives pre-learned; that gap is discovery cost sitting on snerta.');
   }
 
   const prefs = usable.map((u) => u.preference);
