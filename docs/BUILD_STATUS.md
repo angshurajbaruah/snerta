@@ -50,6 +50,13 @@ the middle, top-left 1993 ms. See `docs/QA_FINDINGS.md`.
 - Rotation and pinch-zoom interrupts (not triggered in the run).
 - VoiceOver / TalkBack, 200% browser zoom.
 
+## Where the evidence stands
+The reach premise is **cited, not measured** — see `docs/EVIDENCE_BASE.md` (D75–D78).
+snerta's own untested claim is narrower and unchanged: whether moving these three controls
+to a lower rail in a web page helps, whether it is worth the content the rail displaces,
+and whether people leave it on. Apple shipped the same intervention in iOS 15 and had to
+add a setting to undo it, so a mixed result is the expected one.
+
 ## Next
 Run the **four-trial ABBA version** on a phone, end to end, and get real durations — the
 emulated ones are automation speed and mean nothing. The one real trial run on file
