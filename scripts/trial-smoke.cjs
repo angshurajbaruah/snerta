@@ -1,5 +1,5 @@
 /**
- * Walks both timed trials in a real engine and checks the geometry the jsdom tests
+ * Walks all four timed trials in a real engine and checks the geometry the jsdom tests
  * cannot see: that nothing covers the controls the task needs.
  * Emulated touch, NOT a device test. Run against `npm run preview` (port 4173):
  *   node scripts/trial-smoke.cjs [url]
@@ -23,7 +23,7 @@ const { chromium } = require('playwright');
   await p.waitForTimeout(300);
 
   let ok = true;
-  for (let trial = 1; trial <= 2; trial++) {
+  for (let trial = 1; trial <= 4; trial++) {
     const who = await p.locator('.cal__card .title').innerText();
     const name = who.replace(/^Find /, '').replace(/,.*$/, '');
     await p.getByRole('button', { name: 'Start' }).tap();

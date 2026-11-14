@@ -3,6 +3,7 @@ import { BackButton, BrandBar, PillButton, Screen } from '../components/ui';
 import {
   COMFORT_TEXT,
   compare,
+  type Comfort,
   describeComfort,
   describeDuration,
   type Preference,
@@ -12,6 +13,16 @@ import { buildSessionExport, downloadJson } from '../lib/export';
 import type { Hand } from '../types';
 import type { CalibrationResult } from './Calibrate';
 import type { ComfortResult } from './ComfortReport';
+
+/** Averages are shown to one decimal; a whole number keeps its word label. */
+function fmt(v: number | null): string {
+  if (v === null) return '—';
+  return v % 1 === 0 ? String(v) : v.toFixed(1);
+}
+function comfortWord(v: number | null): string {
+  if (v === null) return 'Not rated';
+  return v % 1 === 0 ? COMFORT_TEXT[v as Comfort] : 'Average of both runs';
+}
 
 export function Results({
   hand,
@@ -66,7 +77,10 @@ export function Results({
 
       <div className="intro">
         <h1 className="title">What happened</h1>
-        <p className="lede">Two tasks, one in each layout. Whatever the numbers say.</p>
+        <p className="lede">
+          Four tasks, two in each layout. Each number below is the middle of two runs.
+          Whatever they say.
+        </p>
       </div>
 
       <div className="scroller">
@@ -95,16 +109,12 @@ export function Results({
               </h2>
               <div className="versus">
                 <div className="versus__side">
-                  <span className="versus__n">{c.standard.comfort ?? '—'}</span>
-                  <span className="versus__l">
-                    {c.standard.comfort ? COMFORT_TEXT[c.standard.comfort] : 'Not rated'}
-                  </span>
+                  <span className="versus__n">{fmt(c.standard.comfort)}</span>
+                  <span className="versus__l">{comfortWord(c.standard.comfort)}</span>
                 </div>
                 <div className="versus__side">
-                  <span className="versus__n">{c.kab.comfort ?? '—'}</span>
-                  <span className="versus__l">
-                    {c.kab.comfort ? COMFORT_TEXT[c.kab.comfort] : 'Not rated'}
-                  </span>
+                  <span className="versus__n">{fmt(c.kab.comfort)}</span>
+                  <span className="versus__l">{comfortWord(c.kab.comfort)}</span>
                 </div>
               </div>
               <p className="note">
@@ -178,14 +188,15 @@ export function Results({
           </h2>
           <ul className="mismatch">
             <li>
-              Two tasks on one phone, by one person. It says nothing about anyone else, or about
+              Four tasks on one phone, by one person. It says nothing about anyone else, or about
               you on another day.
             </li>
             <li>
-              {c
-                ? `The ${c.firstMode === 'kab' ? 'snerta.' : 'Original'} layout went first, so practice favoured the other one.`
-                : 'Whichever layout went first, practice favours the second.'}{' '}
-              One pair of trials cannot separate that from the layout.
+              {c && c.balanced
+                ? `The ${c.firstMode === 'kab' ? 'snerta.' : 'Original'} layout went first and last, so both layouts sat at the same average point in the order. Practice is spread evenly between them rather than landing on one — which is not the same as it being gone.`
+                : c
+                  ? `The runs did not come out even, so practice is still mixed into the difference above. The ${c.firstMode === 'kab' ? 'snerta.' : 'Original'} layout went first.`
+                  : 'Whichever layout went first, practice favours what comes after it.'}
             </li>
             <li>A difference of a second or two is well inside normal variation between attempts.</li>
             <li>Nothing here was measured about your hand, and nothing was uploaded.</li>

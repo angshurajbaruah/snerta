@@ -25,8 +25,19 @@ export type SessionExport = {
   trials: TrialResult[];
   /** Which layout ran first. Practice favours whichever came second. */
   firstMode: 'standard' | 'kab' | null;
-  /** Filled only when both trials finished; null otherwise, never a half-comparison. */
-  comparison: { durationDeltaMs: number; comfortDelta: number | null } | null;
+  /**
+   * Filled only when each layout has at least one completed run; null otherwise,
+   * never a half-comparison. `balanced` is false when the runs did not come out
+   * even, which means practice is still mixed into the difference.
+   */
+  comparison: {
+    durationDeltaMs: number;
+    comfortDelta: number | null;
+    balanced: boolean;
+    completedCount: number;
+    standard: { durationMs: number | null; comfort: number | null; meanPosition: number | null };
+    kab: { durationMs: number | null; comfort: number | null; meanPosition: number | null };
+  } | null;
   preference: Preference;
   limitations: string[];
 };
@@ -59,7 +70,7 @@ export function buildSessionExport(args: {
   const c = compare(trials);
   return {
     schemaVersion: SCHEMA_VERSION,
-    build: 'milestone-4-trials',
+    build: 'milestone-5-abba',
     exportedAtIso: (args.now ?? new Date()).toISOString(),
     hand: args.hand,
     evidence: args.skipped ? 'preview' : evidenceKind(args.samples),
@@ -73,7 +84,24 @@ export function buildSessionExport(args: {
     latencyByZoneMs: latencyByZone(args.samples),
     trials,
     firstMode: trials.find((t) => t.position === 1)?.mode ?? null,
-    comparison: c ? { durationDeltaMs: c.durationDeltaMs!, comfortDelta: c.comfortDelta } : null,
+    comparison: c
+      ? {
+          durationDeltaMs: c.durationDeltaMs!,
+          comfortDelta: c.comfortDelta,
+          balanced: c.balanced,
+          completedCount: c.completedCount,
+          standard: {
+            durationMs: c.standard.durationMs,
+            comfort: c.standard.comfort,
+            meanPosition: c.standard.meanPosition,
+          },
+          kab: {
+            durationMs: c.kab.durationMs,
+            comfort: c.kab.comfort,
+            meanPosition: c.kab.meanPosition,
+          },
+        }
+      : null,
     preference: args.preference ?? null,
     limitations: LIMITATIONS,
   };

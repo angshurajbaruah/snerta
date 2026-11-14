@@ -6,12 +6,12 @@ import { MESSAGES, TARGETS, messageById, type TrialResult } from '../src/lib/tri
 
 afterEach(cleanup);
 
-const target = messageById(TARGETS.a)!;
-const other = MESSAGES.find((m) => m.id !== TARGETS.a)!;
+const target = messageById(TARGETS[0])!;
+const other = MESSAGES.find((m) => m.id !== TARGETS[0])!;
 
 function renderTrial(mode: 'standard' | 'kab' = 'kab') {
   const onDone = vi.fn();
-  render(<Trial mode={mode} position={1} targetId={TARGETS.a} hand="right" onDone={onDone} />);
+  render(<Trial mode={mode} position={1} targetId={TARGETS[0]} hand="right" onDone={onDone} />);
   return onDone;
 }
 
@@ -114,7 +114,7 @@ describe('stopping and interruptions', () => {
 
 describe('Results', () => {
   const res = (over: Partial<TrialResult>): TrialResult => ({
-    mode: 'standard', position: 1, targetId: TARGETS.a, durationMs: 8000,
+    mode: 'standard', position: 1, targetId: TARGETS[0], durationMs: 8000,
     comfort: 4, offTaskTaps: 0, completed: true, ...over,
   });
 

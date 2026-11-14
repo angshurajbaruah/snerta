@@ -19,7 +19,7 @@ import {
 import type { Mode } from '../src/types';
 
 const run = (s: TrialState, ...actions: TrialAction[]) => actions.reduce(trialReducer, s);
-const ready = (mode: Mode = 'standard') => initialTrial(mode, TARGETS.a);
+const ready = (mode: Mode = 'standard') => initialTrial(mode, TARGETS[0]);
 const started = (mode: Mode = 'standard', at = 1000) => run(ready(mode), { type: 'start', at });
 
 /** The intended path: search, open the right message, menu, archive, back. */
@@ -27,7 +27,7 @@ const finish = (s: TrialState, endAt = 9000) =>
   run(
     s,
     { type: 'tapSearch' },
-    { type: 'openMessage', id: TARGETS.a, at: 3000 },
+    { type: 'openMessage', id: TARGETS[0], at: 3000 },
     { type: 'tapMenu' },
     { type: 'tapArchive', at: 5000 },
     { type: 'tapBack', at: endAt },
@@ -66,7 +66,7 @@ describe('the task needs every control that moves', () => {
     const s = run(
       started(),
       { type: 'tapSearch' },
-      { type: 'openMessage', id: TARGETS.a, at: 2000 },
+      { type: 'openMessage', id: TARGETS[0], at: 2000 },
       { type: 'tapMenu' },
       { type: 'tapArchive', at: 3000 },
     );
@@ -78,7 +78,7 @@ describe('the task needs every control that moves', () => {
     const s = run(
       started(),
       { type: 'tapSearch' },
-      { type: 'openMessage', id: TARGETS.a, at: 2000 },
+      { type: 'openMessage', id: TARGETS[0], at: 2000 },
       { type: 'tapBack', at: 3000 },
     );
     expect(s.status).toBe('running');
@@ -88,7 +88,7 @@ describe('the task needs every control that moves', () => {
   it('reports progress as thirds, in order', () => {
     let s = started();
     expect(stepsDone(s)).toBe(0);
-    s = run(s, { type: 'tapSearch' }, { type: 'openMessage', id: TARGETS.a, at: 2000 });
+    s = run(s, { type: 'tapSearch' }, { type: 'openMessage', id: TARGETS[0], at: 2000 });
     expect(stepsDone(s)).toBe(1);
     s = run(s, { type: 'tapMenu' }, { type: 'tapArchive', at: 3000 });
     expect(stepsDone(s)).toBe(2);
@@ -99,7 +99,7 @@ describe('the task needs every control that moves', () => {
 
 describe('taps that do not advance the task are counted, not called errors', () => {
   it('counts opening the wrong message, and still lets the person recover', () => {
-    const wrong = MESSAGES.find((m) => m.id !== TARGETS.a)!;
+    const wrong = MESSAGES.find((m) => m.id !== TARGETS[0])!;
     let s = run(started(), { type: 'tapSearch' }, { type: 'openMessage', id: wrong.id, at: 2000 });
     expect(s.offTaskTaps).toBe(1);
     expect(s.view).toBe('message'); // it really did open; the person is not blocked
@@ -110,7 +110,7 @@ describe('taps that do not advance the task are counted, not called errors', () 
   });
 
   it('counts archiving the wrong message without marking the task done', () => {
-    const wrong = MESSAGES.find((m) => m.id !== TARGETS.a)!;
+    const wrong = MESSAGES.find((m) => m.id !== TARGETS[0])!;
     const s = run(
       started(),
       { type: 'tapSearch' },
@@ -130,7 +130,7 @@ describe('taps that do not advance the task are counted, not called errors', () 
     const s = run(
       started(),
       { type: 'tapSearch' },
-      { type: 'openMessage', id: TARGETS.a, at: 2000 },
+      { type: 'openMessage', id: TARGETS[0], at: 2000 },
       { type: 'tapMenu' },
       { type: 'tapBack', at: 2500 },
     );
@@ -147,56 +147,104 @@ describe('counterbalancing', () => {
     expect(n).toBe(500);
   });
 
-  it('runs both layouts, in order, on two different messages', () => {
+  it('runs ABBA, so each layout averages the same position', () => {
     for (const first of ['standard', 'kab'] as Mode[]) {
+      const other: Mode = first === 'standard' ? 'kab' : 'standard';
       const plan = trialPlan(first);
-      expect(plan.map((p) => p.mode)).toEqual([first, first === 'standard' ? 'kab' : 'standard']);
-      expect(plan.map((p) => p.position)).toEqual([1, 2]);
-      expect(plan[0].targetId).not.toBe(plan[1].targetId);
+      expect(plan.map((p) => p.mode)).toEqual([first, other, other, first]);
+      expect(plan.map((p) => p.position)).toEqual([1, 2, 3, 4]);
+      const mean = (m: Mode) => {
+        const ps = plan.filter((p) => p.mode === m).map((p) => p.position);
+        return ps.reduce((a, b) => a + b, 0) / ps.length;
+      };
+      expect(mean(first)).toBe(2.5);
+      expect(mean(other)).toBe(2.5);
     }
+  });
+
+  it('gives every trial its own target, so none is a memory test of an earlier one', () => {
+    const ids = trialPlan('standard').map((p) => p.targetId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(MESSAGES.some((m) => m.id === id)).toBe(true);
   });
 });
 
-describe('compare — only from two finished, comparable trials', () => {
+describe('compare — from completed trials, with the balance stated', () => {
   const result = (over: Partial<TrialResult> = {}): TrialResult => ({
-    mode: 'standard', position: 1, targetId: TARGETS.a, durationMs: 8000,
+    mode: 'standard', position: 1, targetId: TARGETS[0], durationMs: 8000,
     comfort: 4, offTaskTaps: 0, completed: true, ...over,
   });
 
-  it('reports both deltas with snerta as the subject', () => {
-    const c = compare([
-      result({ mode: 'standard', position: 1, durationMs: 8000, comfort: 4 }),
-      result({ mode: 'kab', position: 2, durationMs: 9500, comfort: 3 }),
-    ])!;
-    expect(c.durationDeltaMs).toBe(1500); // positive: snerta took longer
-    expect(c.comfortDelta).toBe(-1); // negative: snerta felt worse
-    expect(c.firstMode).toBe('standard');
+  /** A full ABBA set: Original at 1 and 4, snerta at 2 and 3. */
+  const abba = (std: number[], kab: number[], stdC: number[] = [4, 4], kabC: number[] = [3, 3]) => [
+    result({ mode: 'standard', position: 1, durationMs: std[0], comfort: stdC[0] as 1 | 2 | 3 | 4 | 5 }),
+    result({ mode: 'kab', position: 2, durationMs: kab[0], comfort: kabC[0] as 1 | 2 | 3 | 4 | 5 }),
+    result({ mode: 'kab', position: 3, durationMs: kab[1], comfort: kabC[1] as 1 | 2 | 3 | 4 | 5 }),
+    result({ mode: 'standard', position: 4, durationMs: std[1], comfort: stdC[1] as 1 | 2 | 3 | 4 | 5 }),
+  ];
+
+  it('takes the median of each layout runs and reports snerta as the subject', () => {
+    const c = compare(abba([10000, 8000], [9000, 11000]))!;
+    expect(c.standard.durationMs).toBe(9000);
+    expect(c.kab.durationMs).toBe(10000);
+    expect(c.durationDeltaMs).toBe(1000); // positive: snerta took longer
+    expect(c.comfortDelta).toBe(-1);
   });
 
-  it('refuses to compare when a trial was not completed', () => {
-    expect(compare([result({ mode: 'standard' }), result({ mode: 'kab', completed: false })])).toBeNull();
+  it('calls a full ABBA set balanced, with both layouts at the same mean position', () => {
+    const c = compare(abba([10000, 8000], [9000, 11000]))!;
+    expect(c.balanced).toBe(true);
+    expect(c.standard.meanPosition).toBe(2.5);
+    expect(c.kab.meanPosition).toBe(2.5);
+    expect(c.completedCount).toBe(4);
   });
 
-  it('refuses to compare when a trial is missing', () => {
-    expect(compare([result({ mode: 'standard' })])).toBeNull();
+  it('still compares when a run is lost, but marks it unbalanced', () => {
+    const set = abba([10000, 8000], [9000, 11000]);
+    set[2] = { ...set[2], completed: false };
+    const c = compare(set)!;
+    expect(c.balanced).toBe(false);
+    expect(c.completedCount).toBe(3);
+    expect(c.kab.meanPosition).toBe(2); // snerta now sits earlier than Original on average
   });
 
-  it('refuses to compare when a duration was never recorded', () => {
-    expect(compare([result({ mode: 'standard' }), result({ mode: 'kab', durationMs: null })])).toBeNull();
+  it('refuses to compare when a layout has no completed run at all', () => {
+    const set = abba([10000, 8000], [9000, 11000]);
+    set[1] = { ...set[1], completed: false };
+    set[2] = { ...set[2], completed: false };
+    expect(compare(set)).toBeNull();
+  });
+
+  it('ignores incomplete runs rather than counting them as zero', () => {
+    const set = abba([10000, 8000], [9000, 11000]);
+    set[3] = { ...set[3], completed: false, durationMs: null };
+    const c = compare(set)!;
+    expect(c.standard.durationMs).toBe(10000); // the one completed Original run
+    expect(c.standard.runs).toHaveLength(1);
   });
 
   it('still compares durations when a comfort rating was skipped', () => {
-    const c = compare([result({ mode: 'standard' }), result({ mode: 'kab', comfort: null })])!;
+    const set = abba([8000, 8000], [8000, 8000]);
+    set[1] = { ...set[1], comfort: null };
+    set[2] = { ...set[2], comfort: null };
+    const c = compare(set)!;
     expect(c.durationDeltaMs).toBe(0);
     expect(c.comfortDelta).toBeNull();
   });
 
-  it('records which layout ran first, since practice favours the second', () => {
-    const c = compare([
-      result({ mode: 'standard', position: 2 }),
-      result({ mode: 'kab', position: 1 }),
-    ])!;
-    expect(c.firstMode).toBe('kab');
+  it('records which layout ran first', () => {
+    expect(compare(abba([8000, 8000], [8000, 8000]))!.firstMode).toBe('standard');
+    const kabFirst = abba([8000, 8000], [8000, 8000]).map((r) =>
+      r.mode === 'standard' ? { ...r, position: (r.position === 1 ? 2 : 3) as 1 | 2 | 3 | 4 } : { ...r, position: (r.position === 2 ? 1 : 4) as 1 | 2 | 3 | 4 },
+    );
+    expect(compare(kabFirst)!.firstMode).toBe('kab');
+  });
+
+  it('averages comfort across a layout runs rather than taking one', () => {
+    const c = compare(abba([8000, 8000], [8000, 8000], [5, 3], [4, 4]))!;
+    expect(c.standard.comfort).toBe(4);
+    expect(c.kab.comfort).toBe(4);
+    expect(c.comfortDelta).toBe(0);
   });
 });
 
@@ -216,14 +264,15 @@ describe('plain wording, with no spin either way', () => {
     expect(describeComfort(1)).toMatch(/1 point more comfortable/);
     expect(describeComfort(0)).toMatch(/equally comfortable/);
   });
+  it('handles a half-point average without pretending to whole numbers', () => {
+    expect(describeComfort(1.5)).toMatch(/1\.5 points more comfortable/);
+  });
 });
 
 describe('the fictional inbox', () => {
-  it('has two matched targets, both real entries in the list', () => {
-    expect(TARGETS.a).not.toBe(TARGETS.b);
-    for (const id of Object.values(TARGETS)) {
-      expect(MESSAGES.some((m) => m.id === id)).toBe(true);
-    }
+  it('has four distinct targets, all real entries in the list', () => {
+    expect(new Set(TARGETS).size).toBe(4);
+    for (const id of TARGETS) expect(MESSAGES.some((m) => m.id === id)).toBe(true);
   });
 
   it('carries nothing that looks like a real account, address or amount', () => {

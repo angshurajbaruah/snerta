@@ -347,3 +347,27 @@ session. **This run is evidence the experiment runs, not evidence about the hypo
 1. **Somebody else, starting with snerta.** If snerta-first also comes out faster, order stops
    being the obvious explanation.
 2. **Or balance the order inside one session** — see the open question in `DECISION_LOG`.
+
+
+## 2026-11-14 — the first trial result was unreadable, by design rather than by accident
+
+The v4 session (`docs/sessions/2026-11-14-founder-iphone-right-v4-full-run.json`) is the
+first with real timed trials on a phone. Original 16.4 s, snerta 9.3 s — snerta 43% quicker,
+comfort 2 → 4.
+
+That number cannot be used, and the reason is structural rather than a mistake in the run.
+Original went first and snerta second, so "snerta" and "second attempt" are the same column
+of data. A 43% improvement between a first and second attempt at an unfamiliar three-step
+task is unremarkable on its own. Nothing in the two-trial design separates the two, and with
+five volunteers, counterbalancing across people would not separate them reliably either.
+
+Fixed by D67: four trials per person, ABBA. Each layout now averages position 2.5, so
+practice is shared between the layouts inside one person. `compare()` reports a `balanced`
+flag, and `scripts/analyse-sessions.cjs` refuses to pool a session where it is false —
+which, run today, means it pools nothing at all. That is the correct output.
+
+Also found and fixed today: `scripts/smoke-touch.cjs` had been failing for some time on
+`.grid-3`, a selector for a stats block the milestone-3 screens removed. It was a stale
+test, not a broken app, but a check that fails for its own reasons is worse than no check,
+because the failure stops meaning anything. It now asserts against the downloaded export
+(D72).

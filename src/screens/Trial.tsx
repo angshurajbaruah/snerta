@@ -11,6 +11,7 @@ import {
   stepsDone,
   trialReducer,
   type Comfort,
+  type TrialPosition,
   type TrialResult,
 } from '../lib/trial';
 import type { Hand, Mode } from '../types';
@@ -30,7 +31,7 @@ export function Trial({
   onDone,
 }: {
   mode: Mode;
-  position: 1 | 2;
+  position: TrialPosition;
   targetId: string;
   hand: Hand;
   onDone: (r: TrialResult) => void;
@@ -74,7 +75,7 @@ export function Trial({
   };
 
   return (
-    <main className="trial" aria-label={`Task ${position} of 2`}>
+    <main className="trial" aria-label={`Task ${position} of 4`}>
       <div className="trial__app">
         <InboxApp
           placement={placement}
@@ -104,7 +105,7 @@ export function Trial({
       {phase === 'ready' && (
         <div className="cal__card">
           <span className="eyebrow">
-            Task {position} of 2 · {modeName} layout
+            Task {position} of 4 · {modeName} layout
           </span>
           <h1 className="title">Find {target.from}, archive it, come back.</h1>
           <p className="lede">
@@ -136,7 +137,7 @@ export function Trial({
 
       {phase === 'complete' && (
         <div className="cal__card">
-          <span className="eyebrow">Task {position} of 2 · done</span>
+          <span className="eyebrow">Task {position} of 4 · done</span>
           <h1 className="title">How comfortable was that?</h1>
           <p className="note">
             About the reaching, not about whether you got it right. The time is already recorded

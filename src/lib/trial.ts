@@ -23,11 +23,11 @@ export const MESSAGES: readonly Message[] = [
 ];
 
 /**
- * Two targets, matched on purpose: both are person-name senders, both sit low in
- * the list, and both take the same number of actions to finish. The second trial
- * uses the other one so it is not a memory test of the first.
+ * Four targets, one per trial, matched on purpose: all person-name senders, all
+ * reached the same way, all taking the same three actions. A trial never reuses an
+ * earlier target, so no run is a memory test of a previous one.
  */
-export const TARGETS: Record<'a' | 'b', string> = { a: 'm7', b: 'm9' };
+export const TARGETS: readonly string[] = ['m2', 'm5', 'm7', 'm9'];
 
 export function messageById(id: string): Message | undefined {
   return MESSAGES.find((m) => m.id === id);
@@ -164,10 +164,12 @@ export const TOTAL_STEPS = 3;
 export type Comfort = 1 | 2 | 3 | 4 | 5;
 export type Preference = 'standard' | 'kab' | 'none' | null;
 
+export type TrialPosition = 1 | 2 | 3 | 4;
+
 export type TrialResult = {
   mode: Mode;
-  /** 1 or 2 — where this trial fell in the order, which is what order effects attach to. */
-  position: 1 | 2;
+  /** Where this trial fell in the order, which is what order effects attach to. */
+  position: TrialPosition;
   targetId: string;
   durationMs: number | null;
   comfort: Comfort | null;
@@ -183,44 +185,104 @@ export function pickFirstMode(rng: () => number = Math.random): Mode {
   return rng() < 0.5 ? 'standard' : 'kab';
 }
 
-export function trialPlan(firstMode: Mode): { mode: Mode; position: 1 | 2; targetId: string }[] {
-  const second: Mode = firstMode === 'standard' ? 'kab' : 'standard';
-  return [
-    { mode: firstMode, position: 1, targetId: TARGETS.a },
-    { mode: second, position: 2, targetId: TARGETS.b },
-  ];
+/**
+ * ABBA, so practice cancels inside one person instead of needing five of them.
+ *
+ * The first complete run showed why: Original ran first, snerta second, snerta came
+ * out 43% quicker — which is also exactly what a second attempt at any task looks
+ * like. In one session "second" and "snerta" were the same column of data.
+ *
+ * Here each layout takes positions that average to 2.5, so whatever practice is
+ * worth, both layouts get the same share of it.
+ */
+export function trialPlan(firstMode: Mode): { mode: Mode; position: TrialPosition; targetId: string }[] {
+  const other: Mode = firstMode === 'standard' ? 'kab' : 'standard';
+  const order: Mode[] = [firstMode, other, other, firstMode];
+  return order.map((mode, i) => ({
+    mode,
+    position: (i + 1) as TrialPosition,
+    targetId: TARGETS[i],
+  }));
+}
+
+/** Everything recorded for one layout across its runs. */
+export type ModeSummary = {
+  mode: Mode;
+  /** Completed runs only. */
+  runs: TrialResult[];
+  /** Median of the completed durations. */
+  durationMs: number | null;
+  /** Mean of the ratings that were given. */
+  comfort: number | null;
+  offTaskTaps: number;
+  /** Mean position in the order. Equal across layouts is what balance means. */
+  meanPosition: number | null;
+};
+
+function summarise(mode: Mode, results: readonly TrialResult[]): ModeSummary {
+  const runs = results.filter((r) => r.mode === mode && r.completed);
+  const times = runs.map((r) => r.durationMs).filter((v): v is number => v !== null);
+  const comforts: number[] = runs.map((r) => r.comfort).filter((v): v is Comfort => v !== null);
+  return {
+    mode,
+    runs,
+    durationMs: times.length ? median(times) : null,
+    comfort: comforts.length ? comforts.reduce((a, b) => a + b, 0) / comforts.length : null,
+    offTaskTaps: runs.reduce((n, r) => n + r.offTaskTaps, 0),
+    meanPosition: runs.length ? runs.reduce((n, r) => n + r.position, 0) / runs.length : null,
+  };
+}
+
+function median(v: number[]): number {
+  const s = [...v].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
 export type Comparison = {
-  standard: TrialResult;
-  kab: TrialResult;
+  standard: ModeSummary;
+  kab: ModeSummary;
   /** snerta minus Original. Positive means snerta took longer. */
   durationDeltaMs: number | null;
   /** snerta minus Original. Negative means snerta felt less comfortable. */
   comfortDelta: number | null;
-  /** Which layout ran first, since practice favours whichever came second. */
+  /** Which layout ran first. */
   firstMode: Mode;
+  /**
+   * True only when both layouts ran the same number of times at the same average
+   * position. When false, practice is still mixed into the difference and the
+   * comparison has to say so rather than quietly reporting a number.
+   */
+  balanced: boolean;
+  completedCount: number;
 };
 
 /**
- * A comparison is only built from two completed trials. A missing, abandoned or
- * unrated trial yields null rather than a half-answer — the brief's rule, and the
- * only way a result can be trusted later.
+ * Built only from completed trials, and never from a layout with none. An
+ * unbalanced set still produces a comparison, flagged as such, because hiding it
+ * would be worse than showing it with the caveat attached.
  */
 export function compare(results: readonly TrialResult[]): Comparison | null {
-  const standard = results.find((r) => r.mode === 'standard');
-  const kab = results.find((r) => r.mode === 'kab');
-  if (!standard || !kab) return null;
-  if (!standard.completed || !kab.completed) return null;
+  const standard = summarise('standard', results);
+  const kab = summarise('kab', results);
+  if (standard.runs.length === 0 || kab.runs.length === 0) return null;
   if (standard.durationMs === null || kab.durationMs === null) return null;
-  const firstMode = (standard.position === 1 ? 'standard' : 'kab') as Mode;
+  const first = [...results].sort((a, b) => a.position - b.position)[0];
   return {
     standard,
     kab,
     durationDeltaMs: kab.durationMs - standard.durationMs,
     comfortDelta:
-      standard.comfort !== null && kab.comfort !== null ? kab.comfort - standard.comfort : null,
-    firstMode,
+      standard.comfort !== null && kab.comfort !== null
+        ? Math.round((kab.comfort - standard.comfort) * 10) / 10
+        : null,
+    firstMode: first.mode,
+    balanced:
+      standard.runs.length === kab.runs.length &&
+      standard.meanPosition !== null &&
+      kab.meanPosition !== null &&
+      Math.abs(standard.meanPosition - kab.meanPosition) < 0.001,
+    completedCount: standard.runs.length + kab.runs.length,
   };
 }
 
@@ -235,11 +297,12 @@ export function describeDuration(deltaMs: number): string {
 }
 
 export function describeComfort(delta: number): string {
-  if (delta === 0) return 'You rated both layouts equally comfortable.';
-  const n = Math.abs(delta);
+  if (Math.abs(delta) < 0.05) return 'You rated both layouts equally comfortable.';
+  const n = Math.abs(delta) % 1 === 0 ? Math.abs(delta).toString() : Math.abs(delta).toFixed(1);
+  const unit = Math.abs(delta) === 1 ? 'point' : 'points';
   return delta > 0
-    ? `You rated snerta ${n} point${n === 1 ? '' : 's'} more comfortable.`
-    : `You rated snerta ${n} point${n === 1 ? '' : 's'} less comfortable.`;
+    ? `You rated snerta ${n} ${unit} more comfortable.`
+    : `You rated snerta ${n} ${unit} less comfortable.`;
 }
 
 export const COMFORT_TEXT: Record<Comfort, string> = {
