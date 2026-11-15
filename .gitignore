@@ -4,5 +4,6 @@ coverage
 *.local
 .DS_Store
 # never commit participant exports
+snerta-session-*.json
 kab-session-*.json
 tsconfig.tsbuildinfo
